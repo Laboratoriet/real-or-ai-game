@@ -152,9 +152,9 @@ const GameBoard: React.FC = () => {
   const threshold = 25; 
   const maxDrag = 130; 
   
-  // REVERSE Opacity mapping AGAIN: AI Right, Real Left
-  const aiOpacity = useTransform(x, [0, threshold, maxDrag], [0, 0, 1]); // AI fades on RIGHT drag
-  const realOpacity = useTransform(x, [-maxDrag, -threshold, 0], [1, 0, 0]); // Real fades on LEFT drag
+  // Opacity mapping: AI Left, Real Right (Reverted)
+  const aiOpacity = useTransform(x, [-maxDrag, -threshold, 0], [1, 0, 0]); // AI fades on LEFT drag
+  const realOpacity = useTransform(x, [0, threshold, maxDrag], [0, 0, 1]); // Real fades on RIGHT drag
   const rotate = useTransform(x, [-maxDrag * 1.5, maxDrag * 1.5], [-15, 15], { clamp: false });
 
   // Function to handle drag end
@@ -163,17 +163,17 @@ const GameBoard: React.FC = () => {
     const velocityThreshold = 300;
     let direction: 'left' | 'right' | null = null;
 
-    // REVERSE direction assignment AGAIN
+    // Reverted direction assignment
     if (info.offset.x < -dragThreshold || info.velocity.x < -velocityThreshold) {
-        direction = 'right'; // Left swipe = Real Guess
+        direction = 'left'; // Left swipe = AI Guess
     } else if (info.offset.x > dragThreshold || info.velocity.x > velocityThreshold) {
-        direction = 'left'; // Right swipe = AI Guess
+        direction = 'right'; // Right swipe = Real Guess
     }
 
     if (direction) {
-        // Logic based on direction's NEW meaning
+        // Logic based on direction's meaning (Left=AI, Right=Real)
         const guess = direction === 'left' ? 'ai' : 'real'; 
-        console.log(`Swipe ${direction === 'left' ? 'RIGHT' : 'LEFT'} triggered guess: ${guess}`);
+        console.log(`Swipe ${direction} triggered guess: ${guess}`);
         handleMobileGuess(guess); 
         setSwipeDirectionForExit(direction); 
         queueMicrotask(() => x.set(0)); 
@@ -206,7 +206,7 @@ const GameBoard: React.FC = () => {
           setSwipeDirectionForExit(null); // Reset swipe for desktop here
           handleNextPair();
         }
-      }, 1500); // 1.5s feedback display
+      }, 750); // Reduced from 1500ms
     }
   
     return clearExistingTimer;
@@ -408,10 +408,10 @@ const GameBoard: React.FC = () => {
       hidden: { opacity: 0, scale: 0.9, x: 0, rotate: 0 },
       visible: { opacity: 1, scale: 1, x: 0, rotate: 0 },
       exit: (direction: 'left' | 'right' | null) => ({ 
-          x: direction === 'left' ? 300 : direction === 'right' ? -300 : 0, // AI (left dir) flies right, Real (right dir) flies left
+          x: direction === 'left' ? -300 : direction === 'right' ? 300 : 0, // AI (left dir) flies LEFT, Real (right dir) flies RIGHT
           opacity: 0,
           scale: 0.8,
-          rotate: direction === 'left' ? 15 : direction === 'right' ? -15 : 0,
+          rotate: direction === 'left' ? -15 : direction === 'right' ? 15 : 0,
           transition: { duration: 0.3 }
       })
   };
@@ -419,7 +419,7 @@ const GameBoard: React.FC = () => {
   // Define new variants for inline emoji feedback
   const feedbackInlineVariants = {
       hidden: { opacity: 0, scale: 0.7 },
-      visible: { opacity: 1, scale: 1, transition: { duration: 0.2 } },
+      visible: { opacity: 1, scale: 1, transition: { duration: 0.05 } },
       exit: { opacity: 0, scale: 0.7, transition: { duration: 0.2 } }
   };
 
@@ -436,9 +436,9 @@ const GameBoard: React.FC = () => {
         />
       )}
       
-      {/* Header Text Area */}
-      <div className="mb-2"> 
-        <h2 className="text-xl font-medium text-center text-gray-900 mb-1"> 
+      {/* Header Text Area - Reverted */}
+      <div className="mb-2 pt-4">
+        <h2 className="text-2xl font-medium text-center text-gray-900 mb-1">
           {isMobile ? 'Is this photo Real or AI?' : 'Which is the real photo?'}
         </h2>
         {/* Updated Mobile Instructions */}
@@ -483,18 +483,18 @@ const GameBoard: React.FC = () => {
                       isMobileView={true}
                     />
                     
-                    {/* Interactive Drag Overlays - REVERTED */}
+                    {/* Interactive Drag Overlays - Reverted */}
                     <motion.div 
                       className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 pointer-events-none rounded-lg"
-                      style={{ opacity: realOpacity }} // REAL overlay uses realOpacity (triggered by left drag)
+                      style={{ opacity: aiOpacity }} // AI overlay uses aiOpacity (triggered by left drag)
                     >
-                       <span className="text-white text-5xl font-bold flex flex-col items-center">📷<span className="text-2xl mt-1">Real?</span></span>
+                       <span className="text-white text-5xl font-bold flex flex-col items-center">🤖<span className="text-2xl mt-1">AI?</span></span>
                     </motion.div>
                     <motion.div 
                       className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 pointer-events-none rounded-lg"
-                      style={{ opacity: aiOpacity }} // AI overlay uses aiOpacity (triggered by right drag)
+                      style={{ opacity: realOpacity }} // Real overlay uses realOpacity (triggered by right drag)
                     >
-                      <span className="text-white text-5xl font-bold flex flex-col items-center">🤖<span className="text-2xl mt-1">AI?</span></span>
+                      <span className="text-white text-5xl font-bold flex flex-col items-center">📷<span className="text-2xl mt-1">Real?</span></span>
                     </motion.div>
                   </motion.div>
                 )}

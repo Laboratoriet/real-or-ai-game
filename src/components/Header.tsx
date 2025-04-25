@@ -1,7 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ImageIcon } from 'lucide-react';
 
+const MOBILE_BREAKPOINT = 768;
+
+function useWindowSize() {
+  const [size, setSize] = useState({ width: typeof window !== 'undefined' ? window.innerWidth : MOBILE_BREAKPOINT, height: typeof window !== 'undefined' ? window.innerHeight : 800 });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleResize = () => {
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return size;
+}
+
 const Header: React.FC = () => {
+  const { width } = useWindowSize();
+  const isMobile = width < MOBILE_BREAKPOINT;
+
+  if (isMobile) {
+    return null;
+  }
+
   return (
     <header className="bg-white border-b border-gray-100 py-4 px-6">
       <div className="container mx-auto flex items-center justify-between">

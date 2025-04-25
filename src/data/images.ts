@@ -25,8 +25,11 @@ for (const path in allImageFiles) {
     // Now we know categoryImageCache[category] is defined
     const cacheEntry = categoryImageCache[category]!;
 
+    const fileIndexMatch = path.match(/^(\\d+)\\./); // Tries to match leading digits
+    const index = fileIndexMatch ? parseInt(fileIndexMatch[1], 10) : 0;
+
     const image: Image = {
-      id: path,
+      id: `${type}-${category}-${index || path.split('/').pop()}`, // Uses index OR filename
       src: path.replace('/public', ''), 
       category: category,
       isAI: type === 'ai',
