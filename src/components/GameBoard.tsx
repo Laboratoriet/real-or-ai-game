@@ -109,17 +109,28 @@ const GameBoard: React.FC = () => {
   // Function to add new pair images to the mobile list and shuffle
   const updateMobileList = useCallback((newReal: Image, newAi: Image) => {
     setMobileImageList(prevList => {
+      console.log(`[updateMobileList] Attempting to add: Real ID=${newReal.id}, AI ID=${newAi.id}. Current list size: ${prevList.length}`);
       const existingIds = new Set(prevList.map(img => img.id));
       const newList = [...prevList];
+      let addedReal = false;
+      let addedAi = false;
+
       if (!existingIds.has(newReal.id)) {
         newList.push(newReal);
+        addedReal = true;
       }
       if (!existingIds.has(newAi.id)) {
         newList.push(newAi);
+        addedAi = true;
       }
+      const imagesAddedCount = (addedReal ? 1 : 0) + (addedAi ? 1 : 0);
+
+      // Check if the list actually grew before shuffling
       if (newList.length > prevList.length) {
-        return shuffleArray(newList);
+        console.log(`[updateMobileList] Added ${imagesAddedCount} new images. Shuffling. New list size: ${newList.length}`);
+        return shuffleArray(newList); // Shuffle only if list grew
       }
+      console.log(`[updateMobileList] No new images added (already exist). List size remains: ${prevList.length}`);
       return prevList;
     });
   }, []);
