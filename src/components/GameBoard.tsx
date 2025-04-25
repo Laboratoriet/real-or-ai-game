@@ -177,16 +177,25 @@ const GameBoard: React.FC = () => {
         console.log('Feedback timer expired. Advancing...');
         if (isMobile) {
           // --- Mobile Advancement Logic --- 
-          if (currentMobileIndex < mobileImageList.length - 1) {
+          const nextIndex = currentMobileIndex + 1; // Calculate potential next index
+          if (nextIndex < mobileImageList.length) {
             console.log('Advancing mobile index');
-            setCurrentMobileIndex(prev => prev + 1);
+            setCurrentMobileIndex(nextIndex);
+            // Clear mobile feedback state AFTER advancing index
+            // nextPair() is called implicitly when feedback clears, or by handleNextPair below.
+            // console.log('Calling nextPair to clear mobile feedback state (index advance)');
+            // nextPair(); // REMOVE this redundant call
           } else {
-            console.log('Reached end of mobile list, fetching next pair');
-            handleNextPair(); // Fetch new pair
+            console.log('Reached end of mobile list, fetching next pair and resetting index');
+            // Reset index to start from the beginning of the newly shuffled list
+            setCurrentMobileIndex(0); 
+            handleNextPair(); // Fetches new pair, adds to list, and calls nextPair() internally
+            console.log('Index reset to 0, handleNextPair called.');
           }
-          // Clear mobile feedback state AFTER advancing index/pair
-          console.log('Calling nextPair to clear mobile feedback state');
-          nextPair(); 
+          // Ensure nextPair() is called if not handled by handleNextPair (i.e., when just advancing index)
+          if (nextIndex < mobileImageList.length) {
+             nextPair(); // Call nextPair here to clear feedback state when only index advances
+          }
         } else {
           // --- Desktop Advancement Logic --- 
           console.log('Feedback timeout on desktop, calling handleNextPair');
