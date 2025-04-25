@@ -287,8 +287,8 @@ const GameBoard: React.FC = () => {
       }
     };
 
-    if (state.showFeedback && state.isCorrect && state.correctStreak >= 10) {
-      console.log('[Confetti Effect] Triggering for 5 seconds');
+    if (state.showFeedback && state.isCorrect && state.correctStreak > 0 && state.correctStreak % 10 === 0) {
+      console.log(`[Confetti Effect] Triggering for streak ${state.correctStreak}`);
       setShowConfetti(true);
       clearConfettiTimer();
       confettiTimerRef.current = setTimeout(() => {
