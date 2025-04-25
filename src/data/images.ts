@@ -16,9 +16,6 @@ for (const path in allImageFiles) {
   if (parts.length >= 6) {
     const category = parts[3] as Category;
     const type = parts[4]; // 'real' or 'ai'
-    const filename = parts[parts.length - 1];
-    const fileIndexMatch = filename.match(/^(\d+)\./);
-    const index = fileIndexMatch ? parseInt(fileIndexMatch[1], 10) : 0;
 
     // Initialize cache for this category if first time seeing it
     if (!categoryImageCache[category]) {
@@ -29,7 +26,7 @@ for (const path in allImageFiles) {
     const cacheEntry = categoryImageCache[category]!;
 
     const image: Image = {
-      id: `${type}-${category}-${index || filename}`,
+      id: path,
       src: path.replace('/public', ''), 
       category: category,
       isAI: type === 'ai',
