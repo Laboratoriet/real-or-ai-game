@@ -184,12 +184,21 @@ const GameBoard: React.FC = () => {
       clearExistingTimer();
       console.log('Setting feedback timer...');
       nextPairTimerRef.current = setTimeout(() => {
-        console.log('Feedback timer expired. Finding next available mobile image...');
+        // --- Moved logic common to both mobile and desktop ---
+        // Reset swipe direction regardless of mode
+        setSwipeDirectionForExit(null); 
+
         if (isMobile) {
+          console.log('Feedback timer expired (Mobile). Finding next available image and potentially fetching more...');
+
+          // --- Mobile Advancement Logic ---
+          let chosenNextIndex = -1;
+          let chosenNextImageId: string | null = null;
+
           // Filter out recently shown images
           let availableImages = mobileImageList.filter(img => !recentMobileImageIds.includes(img.id));
 
-          // Fallback: If all images are recent (list size <= history), use the full list
+          // Fallback: If all images are recent, use the full list
           if (availableImages.length === 0 && mobileImageList.length > 0) {
             console.warn('All images in mobile list are in recent history. Falling back to full list.');
             availableImages = mobileImageList;
@@ -201,39 +210,52 @@ const GameBoard: React.FC = () => {
             const nextIndex = mobileImageList.findIndex(img => img.id === nextImage.id);
 
             if (nextIndex !== -1) {
-              console.log(`Advancing to mobile index ${nextIndex} (ID: ${nextImage.id}), avoiding recent images.`);
+              chosenNextIndex = nextIndex;
+              chosenNextImageId = nextImage.id;
+              console.log(`Selected next mobile index ${chosenNextIndex} (ID: ${chosenNextImageId}), avoiding recent images.`);
               updateHistory(nextImage.id); // Update history with the chosen image ID
-              setCurrentMobileIndex(nextIndex); 
             } else {
-              // Should theoretically not happen if availableImages came from mobileImageList
               console.error('Selected available image not found in original list?');
-              // Fallback: just go to index 0
-              updateHistory(mobileImageList[0].id);
-              setCurrentMobileIndex(0);
+              if (mobileImageList.length > 0) {
+                  chosenNextIndex = 0;
+                  chosenNextImageId = mobileImageList[0].id;
+                  updateHistory(mobileImageList[0].id);
+              }
             }
           } else {
-              // List is empty, cannot advance
-              console.warn('Mobile image list is empty, cannot advance index.');
-              // Fetching new pair might be handled by other logic, or we could trigger it here?
-              // For now, do nothing, wait for images to load.
+            console.warn('Mobile image list is empty, cannot advance index.');
+            chosenNextIndex = 0; // Stick with 0
           }
 
-          // Always clear feedback state after attempting to advance
-          nextPair(); 
+          // Actually set the state AFTER all calculations
+          if (chosenNextIndex !== -1) {
+              setCurrentMobileIndex(chosenNextIndex);
+          }
+
+          // Aggressively fetch more images if the list is small
+          const FETCH_THRESHOLD = MOBILE_HISTORY_LENGTH * 2; // e.g., 30
+          const FETCH_COUNT = 4; // Fetch 4 pairs (8 images)
+          if (mobileImageList.length < FETCH_THRESHOLD) {
+              console.log(`Mobile list size (${mobileImageList.length}) below threshold (${FETCH_THRESHOLD}). Fetching ${FETCH_COUNT} more pairs.`);
+              for (let i = 0; i < FETCH_COUNT; i++) {
+                  generateRandomPair(); // Call the original function multiple times
+              }
+          }
+
+          // Clear mobile feedback state
+          nextPair();
+
         } else {
-          // --- Desktop Advancement Logic --- 
+          // --- Desktop Advancement Logic ---
           console.log('Feedback timeout on desktop, calling handleNextPair');
           // handleNextPair clears timer, calls nextPair (clears state), generates next
           handleNextPair();
         }
-        // Reset swipe direction regardless of mode
-        setSwipeDirectionForExit(null); 
       }, 1500); // 1.5s feedback display
     }
   
     return clearExistingTimer;
-  // Re-add dependencies needed for mobile logic
-  // Add updateHistory to dependency array
+  // Added mobileImageList to dependencies again
   }, [state.showFeedback, handleNextPair, isMobile, currentMobileIndex, mobileImageList, mobileImageList.length, nextPair, recentMobileImageIds, updateHistory]);
 
   useEffect(() => {
