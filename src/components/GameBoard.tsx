@@ -220,12 +220,16 @@ const GameBoard: React.FC = () => {
       console.log('[Advancement Effect] Flag is true. Calculating next mobile index...');
       setSwipeDirectionForExit(null); // Reset swipe for mobile here
 
+      console.log('[Advancement Effect] Current History:', recentMobileImageIds);
+
       // --- Mobile Advancement Logic (moved here) ---
       let chosenNextIndex = -1;
       let chosenNextImageId: string | null = null;
 
       // Filter out recently shown images (using latest state)
       let availableImages = mobileImageList.filter(img => !recentMobileImageIds.includes(img.id));
+
+      console.log(`[Advancement Effect] Filtered List Size (excluding history): ${availableImages.length} (Original: ${mobileImageList.length})`);
 
       // Fallback
       if (availableImages.length === 0 && mobileImageList.length > 0) {
