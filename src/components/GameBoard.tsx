@@ -66,6 +66,7 @@ const GameBoard: React.FC = () => {
   const [isInitialMobileLoad, setIsInitialMobileLoad] = useState(true); // Track initial load for mobile
   const [swipeDirectionForExit, setSwipeDirectionForExit] = useState<'left' | 'right' | null>(null); // State for exit animation
   const [recentMobileImageIds, setRecentMobileImageIds] = useState<string[]>([]); // Track recent IDs
+  const [needsMobileAdvance, setNeedsMobileAdvance] = useState<boolean>(false); // State to trigger advancement
 
   // Helper to update recent image history
   const updateHistory = useCallback((newImageId: string) => {
@@ -195,71 +196,14 @@ const GameBoard: React.FC = () => {
       clearExistingTimer();
       console.log('Setting feedback timer...');
       nextPairTimerRef.current = setTimeout(() => {
-        // --- Moved logic common to both mobile and desktop ---
         // Reset swipe direction regardless of mode
-        setSwipeDirectionForExit(null); 
-
         if (isMobile) {
-          console.log('Feedback timer expired (Mobile). Finding next available image and potentially fetching more...');
-
-          // --- Mobile Advancement Logic ---
-          let chosenNextIndex = -1;
-          let chosenNextImageId: string | null = null;
-
-          // Filter out recently shown images
-          let availableImages = mobileImageList.filter(img => !recentMobileImageIds.includes(img.id));
-
-          // Fallback: If all images are recent, use the full list
-          if (availableImages.length === 0 && mobileImageList.length > 0) {
-            console.warn('All images in mobile list are in recent history. Falling back to full list.');
-            availableImages = mobileImageList;
-          }
-
-          if (availableImages.length > 0) {
-            // Select a random image from the available ones
-            const nextImage = availableImages[Math.floor(Math.random() * availableImages.length)];
-            const nextIndex = mobileImageList.findIndex(img => img.id === nextImage.id);
-
-            if (nextIndex !== -1) {
-              chosenNextIndex = nextIndex;
-              chosenNextImageId = nextImage.id;
-              console.log(`Selected next mobile index ${chosenNextIndex} (ID: ${chosenNextImageId}), avoiding recent images.`);
-              updateHistory(nextImage.id); // Update history with the chosen image ID
-            } else {
-              console.error('Selected available image not found in original list?');
-              if (mobileImageList.length > 0) {
-                  chosenNextIndex = 0;
-                  chosenNextImageId = mobileImageList[0].id;
-                  updateHistory(mobileImageList[0].id);
-              }
-            }
-          } else {
-            console.warn('Mobile image list is empty, cannot advance index.');
-            chosenNextIndex = 0; // Stick with 0
-          }
-
-          // Actually set the state AFTER all calculations
-          if (chosenNextIndex !== -1) {
-              setCurrentMobileIndex(chosenNextIndex);
-          }
-
-          // Aggressively fetch more images if the list is small
-          const FETCH_THRESHOLD = MOBILE_HISTORY_LENGTH * 2; // e.g., 30
-          const FETCH_COUNT = 4; // Fetch 4 pairs (8 images)
-          if (mobileImageList.length < FETCH_THRESHOLD) {
-              console.log(`Mobile list size (${mobileImageList.length}) below threshold (${FETCH_THRESHOLD}). Fetching ${FETCH_COUNT} more pairs.`);
-              for (let i = 0; i < FETCH_COUNT; i++) {
-                  generateRandomPair(); // Call the original function multiple times
-              }
-          }
-
-          // Clear mobile feedback state
-          nextPair();
-
+          console.log('Feedback timer expired (Mobile). Setting flag to advance.');
+          setNeedsMobileAdvance(true); // Set flag instead of calculating here
         } else {
           // --- Desktop Advancement Logic ---
           console.log('Feedback timeout on desktop, calling handleNextPair');
-          // handleNextPair clears timer, calls nextPair (clears state), generates next
+          setSwipeDirectionForExit(null); // Reset swipe for desktop here
           handleNextPair();
         }
       }, 1500); // 1.5s feedback display
@@ -267,7 +211,73 @@ const GameBoard: React.FC = () => {
   
     return clearExistingTimer;
   // Added mobileImageList to dependencies again
+  // Removed direct advancement logic dependencies, only needs showFeedback now?
   }, [state.showFeedback, handleNextPair, isMobile, currentMobileIndex, mobileImageList, mobileImageList.length, nextPair, recentMobileImageIds, updateHistory]);
+
+  // Effect to handle mobile advancement when flag is set
+  useEffect(() => {
+    if (needsMobileAdvance && isMobile) {
+      console.log('[Advancement Effect] Flag is true. Calculating next mobile index...');
+      setSwipeDirectionForExit(null); // Reset swipe for mobile here
+
+      // --- Mobile Advancement Logic (moved here) ---
+      let chosenNextIndex = -1;
+      let chosenNextImageId: string | null = null;
+
+      // Filter out recently shown images (using latest state)
+      let availableImages = mobileImageList.filter(img => !recentMobileImageIds.includes(img.id));
+
+      // Fallback
+      if (availableImages.length === 0 && mobileImageList.length > 0) {
+        console.warn('[Advancement Effect] All images in mobile list are in recent history. Falling back to full list.');
+        availableImages = mobileImageList;
+      }
+
+      if (availableImages.length > 0) {
+        const nextImage = availableImages[Math.floor(Math.random() * availableImages.length)];
+        const nextIndex = mobileImageList.findIndex(img => img.id === nextImage.id);
+
+        if (nextIndex !== -1) {
+          chosenNextIndex = nextIndex;
+          chosenNextImageId = nextImage.id;
+          console.log(`[Advancement Effect] Selected next mobile index ${chosenNextIndex} (ID: ${chosenNextImageId}).`);
+          updateHistory(nextImage.id); // Update history
+        } else {
+          console.error('[Advancement Effect] Selected available image not found in original list?');
+          if (mobileImageList.length > 0) {
+            chosenNextIndex = 0;
+            chosenNextImageId = mobileImageList[0].id;
+            updateHistory(mobileImageList[0].id);
+          }
+        }
+      } else {
+        console.warn('[Advancement Effect] Mobile image list is empty, cannot advance index.');
+        chosenNextIndex = 0;
+      }
+
+      // Set the calculated index state
+      if (chosenNextIndex !== -1) {
+        setCurrentMobileIndex(chosenNextIndex);
+      }
+
+      // Aggressively fetch more images if the list is small
+      const FETCH_THRESHOLD = MOBILE_HISTORY_LENGTH * 2;
+      const FETCH_COUNT = 4;
+      if (mobileImageList.length < FETCH_THRESHOLD) {
+          console.log(`[Advancement Effect] Mobile list size (${mobileImageList.length}) below threshold (${FETCH_THRESHOLD}). Fetching ${FETCH_COUNT} more pairs.`);
+          for (let i = 0; i < FETCH_COUNT; i++) {
+              generateRandomPair();
+          }
+      }
+
+      // Clear feedback state
+      nextPair();
+
+      // Reset the flag
+      setNeedsMobileAdvance(false);
+      console.log('[Advancement Effect] Advancement complete. Flag reset.');
+    }
+  }, [needsMobileAdvance, isMobile, mobileImageList, recentMobileImageIds, updateHistory, generateRandomPair, nextPair]); // Dependencies for the advancement logic
 
   useEffect(() => {
     const clearConfettiTimer = () => {
