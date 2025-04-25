@@ -504,7 +504,6 @@ const GameBoard: React.FC = () => {
                     animate="visible"
                     exit="exit"
                     custom={swipeDirectionForExit}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }} // Default spring for enter/drag return
                   >
                     <ImageCard
                       image={currentMobileImage}
