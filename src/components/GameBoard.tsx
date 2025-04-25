@@ -156,6 +156,7 @@ const GameBoard: React.FC = () => {
   const aiOpacity = useTransform(x, [-maxDrag, -threshold, 0], [1, 0, 0]); // AI fades on LEFT drag
   const realOpacity = useTransform(x, [0, threshold, maxDrag], [0, 0, 1]); // Real fades on RIGHT drag
   const rotate = useTransform(x, [-maxDrag * 1.5, maxDrag * 1.5], [-15, 15], { clamp: false });
+  const imageOpacity = useTransform(x, [-maxDrag, 0, maxDrag], [0.4, 1, 0.4]); // Image fades towards edges
 
   // Function to handle drag end
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number, y: number }, velocity: { x: number, y: number } }) => {
@@ -463,7 +464,7 @@ const GameBoard: React.FC = () => {
                     className="absolute w-full h-full z-10 cursor-grab overflow-hidden rounded-lg" 
                     drag="x"
                     dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }} 
-                    style={{ x, rotate }} 
+                    style={{ x, rotate, opacity: imageOpacity }}
                     onDragEnd={handleDragEnd}
                     variants={imageVariants}
                     initial="hidden"
