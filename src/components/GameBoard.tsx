@@ -182,19 +182,14 @@ const GameBoard: React.FC = () => {
             console.log('Advancing mobile index');
             setCurrentMobileIndex(nextIndex);
             // Clear mobile feedback state AFTER advancing index
-            // nextPair() is called implicitly when feedback clears, or by handleNextPair below.
-            // console.log('Calling nextPair to clear mobile feedback state (index advance)');
-            // nextPair(); // REMOVE this redundant call
+            nextPair(); // Call nextPair here to clear feedback state when only index advances
           } else {
-            console.log('Reached end of mobile list, fetching next pair and resetting index');
-            // Reset index to start from the beginning of the newly shuffled list
-            setCurrentMobileIndex(0); 
+            console.log('Reached end of mobile list, fetching next pair and resetting index RANDOMLY');
+            // Reset index to a RANDOM position in the current list to improve variety
+            const randomIndex = Math.floor(Math.random() * mobileImageList.length);
+            setCurrentMobileIndex(randomIndex); 
             handleNextPair(); // Fetches new pair, adds to list, and calls nextPair() internally
-            console.log('Index reset to 0, handleNextPair called.');
-          }
-          // Ensure nextPair() is called if not handled by handleNextPair (i.e., when just advancing index)
-          if (nextIndex < mobileImageList.length) {
-             nextPair(); // Call nextPair here to clear feedback state when only index advances
+            console.log(`Index reset to random index ${randomIndex}, handleNextPair called.`);
           }
         } else {
           // --- Desktop Advancement Logic --- 
