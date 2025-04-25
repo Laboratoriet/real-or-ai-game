@@ -437,13 +437,13 @@ const GameBoard: React.FC = () => {
         />
       )}
       
-      {/* Header Text Area - Reverted */}
-      <div className="mb-2 pt-4">
+      {/* Header Text Area - Adjusted Padding */}
+      <div className="mb-2 pt-2">
         <h2 className="text-2xl font-medium text-center text-gray-900 mb-1">
           {isMobile ? 'Is this photo Real or AI?' : 'Which is the real photo?'}
         </h2>
-        {/* Updated Mobile Instructions */}
-        <p className="text-center text-gray-500 mb-3"> 
+        {/* Updated Mobile Instructions - Adjusted Padding */}
+        <p className="text-center text-gray-500 mb-4">
           {isMobile
             ? 'Swipe or click buttons below' 
             : 'Click on the image you think is real.'}
@@ -527,38 +527,39 @@ const GameBoard: React.FC = () => {
                </div>
             )}
             
-            {/* Mobile Buttons Container - Lighter Border */}
-            {!state.showFeedback && currentMobileImage && (
+            {/* Mobile Buttons Container - Highlight Correct on Feedback */}
+            {currentMobileImage && (
               <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }} 
-                // Increased top margin, use justify-center
-                className="flex justify-center gap-4 w-full max-w-md px-4 mt-4 mb-2" 
+                animate={{ opacity: 1 }} // Just fade in initially
+                transition={{ duration: 0.2, delay: 0.5 }} // Keep initial delay
+                className="flex justify-center gap-4 w-full max-w-md px-4 mt-2 mb-1" 
               >
-                {/* Left Button = REAL - Lighter Border */}
-                <button
+                {/* Left Button = REAL - Conditionally Fade */}
+                <motion.button
                   onClick={() => handleMobileGuess('real')}
                   disabled={state.showFeedback}
-                  // Changed border-gray-300 to border-gray-200
-                  className="flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 transition duration-150 disabled:opacity-50 text-base flex items-center justify-center gap-2 hover:bg-gray-50"
+                  animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 0.3 : 1) : 1 }} // Fade if incorrect (AI was correct)
+                  transition={{ duration: 0.2 }}
+                  className="flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 hover:bg-gray-50"
                 >
                   <span className="text-xl">📷</span> Real
-                </button>
-                {/* Right Button = AI - Lighter Border */}
-                <button
+                </motion.button>
+                {/* Right Button = AI - Conditionally Fade */}
+                <motion.button
                   onClick={() => handleMobileGuess('ai')} 
                   disabled={state.showFeedback}
-                  // Changed border-gray-300 to border-gray-200
-                  className="flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 transition duration-150 disabled:opacity-50 text-base flex items-center justify-center gap-2 hover:bg-gray-50"
+                  animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 1 : 0.3) : 1 }} // Fade if incorrect (Real was correct)
+                  transition={{ duration: 0.2 }}
+                  className="flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 hover:bg-gray-50"
                 >
                    <span className="text-xl">🤖</span> AI
-                </button>
+                </motion.button>
               </motion.div>
             )}
 
-            {/* Score Display (Positioned after buttons) */}
-            <div className="w-full flex justify-center mt-2 mb-1"> {/* Add top margin, small bottom margin */} 
+            {/* Score Display (Positioned after buttons) - Reduced Margins */}
+            <div className="w-full flex justify-center mt-1 mb-0"> 
               <ScoreDisplay
                 score={state.score}
                 totalAttempts={state.totalAttempts}
