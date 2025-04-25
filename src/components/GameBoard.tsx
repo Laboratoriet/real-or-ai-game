@@ -337,13 +337,13 @@ const GameBoard: React.FC = () => {
           // Desktop selection logic
           selectImage(selectedImageId);
           const isCorrect = selectedImageId === currentPair?.realImage.id;
+          console.log('Desktop keyboard select. Showing feedback and queuing next pair (500ms delay).');
           showFeedback(isCorrect);
-          // ADD back immediate advancement for keyboard
-          // Use a tiny timeout to ensure state update registers before advancing
+          // Use a timeout for faster (but not instant) advancement vs mouse click
           setTimeout(() => {
             handleNextPair();
-          }, 50); // 50ms delay
-          // The feedback useEffect timer will be cleared by handleNextPair
+          }, 500); // 500ms delay
+          // The feedback useEffect timer will likely be cleared by handleNextPair before it fires.
         }
       }
     };
