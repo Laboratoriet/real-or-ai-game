@@ -455,7 +455,7 @@ const GameBoard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto relative p-4 flex flex-col overflow-hidden h-full"> {/* Ensure parent takes height */}
+    <div className="max-w-3xl mx-auto relative p-4 flex flex-col overflow-hidden h-full"> {/* Changed max-w-4xl to max-w-3xl */}
       {/* Update Confetti props */}
       {showConfetti && (
         <Confetti
@@ -524,16 +524,16 @@ const GameBoard: React.FC = () => {
 
               {/* Interactive Drag Overlays - MOVED OUTSIDE & ABOVE draggable div */}
               <motion.div 
-                className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 pointer-events-none rounded-lg"
+                className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 pointer-events-none rounded-lg"
                 style={{ opacity: aiOpacity }} // AI overlay uses aiOpacity (triggered by left drag)
               >
-                  <span className="text-white text-5xl font-bold flex flex-col items-center">🤖<span className="text-2xl mt-1">AI?</span></span>
+                  <span className="text-gray-800 text-5xl font-bold flex flex-col items-center">🤖<span className="text-2xl mt-1">AI?</span></span>
               </motion.div>
               <motion.div 
-                className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 pointer-events-none rounded-lg"
+                className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 pointer-events-none rounded-lg"
                 style={{ opacity: realOpacity }} // Real overlay uses realOpacity (triggered by right drag)
               >
-                <span className="text-white text-5xl font-bold flex flex-col items-center">📷<span className="text-2xl mt-1">Real?</span></span>
+                <span className="text-gray-800 text-5xl font-bold flex flex-col items-center">📷<span className="text-2xl mt-1">Real?</span></span>
               </motion.div>
 
               {/* NEW: AnimatePresence for Inline Feedback Emoji (already correctly positioned) */}

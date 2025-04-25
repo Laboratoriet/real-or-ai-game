@@ -26,14 +26,14 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className="bg-white border-b border-gray-100 py-4 px-6">
+    <header className="bg-white border-b border-gray-100 py-2 px-6">
       <div className="container mx-auto flex items-center justify-between">
         <a href="https://alkemist.no" target="_blank" rel="noopener noreferrer" aria-label="Alkemist Homepage">
-          <img src="/alkemist-logo/Alkemist-logo.svg" alt="Alkemist Logo" className="h-6" />
+          <img src="/alkemist-logo/Alkemist-logo.svg" alt="Alkemist Logo" className="h-4" />
         </a>
         <div className="flex items-center space-x-2">
-          <ImageIcon className="h-6 w-6 text-gray-700" />
-          <h1 className="text-xl font-medium text-gray-700">Real or AI?</h1>
+          <ImageIcon className="h-5 w-5 text-gray-700" />
+          <h1 className="text-lg font-medium text-gray-700">Real or AI?</h1>
         </div>
       </div>
     </header>

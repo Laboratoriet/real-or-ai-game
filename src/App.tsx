@@ -8,7 +8,7 @@ function App() {
   return (
     <div className="h-dvh flex flex-col bg-white overflow-hidden">
       <Header />
-      <main className="flex-grow container mx-auto px-4 pt-2 md:pt-4">
+      <main className="flex-grow container mx-auto px-4 pt-2 md:pt-4 min-h-0">
         <GameBoard />
       </main>
       <Footer />
