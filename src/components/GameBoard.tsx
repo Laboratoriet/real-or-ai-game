@@ -10,6 +10,7 @@ import Confetti from 'react-confetti';
 import { Image } from '../types'; // Use Image type
 
 const MOBILE_BREAKPOINT = 768; // Define a breakpoint
+const MOBILE_HISTORY_LENGTH = 15; // Max number of recent images to track for non-repetition
 
 // Simple hook to get window size
 function useWindowSize() {
@@ -64,6 +65,15 @@ const GameBoard: React.FC = () => {
   const [currentMobileIndex, setCurrentMobileIndex] = useState(0);
   const [isInitialMobileLoad, setIsInitialMobileLoad] = useState(true); // Track initial load for mobile
   const [swipeDirectionForExit, setSwipeDirectionForExit] = useState<'left' | 'right' | null>(null); // State for exit animation
+  const [recentMobileImageIds, setRecentMobileImageIds] = useState<string[]>([]); // Track recent IDs
+
+  // Helper to update recent image history
+  const updateHistory = useCallback((newImageId: string) => {
+    setRecentMobileImageIds(prev => {
+      const updatedHistory = [newImageId, ...prev.filter(id => id !== newImageId)];
+      return updatedHistory.slice(0, MOBILE_HISTORY_LENGTH);
+    });
+  }, []);
 
   const handleImageSelect = (imageId: string) => {
     if (state.selectedImageId || state.showFeedback) return;
@@ -174,23 +184,42 @@ const GameBoard: React.FC = () => {
       clearExistingTimer();
       console.log('Setting feedback timer...');
       nextPairTimerRef.current = setTimeout(() => {
-        console.log('Feedback timer expired. Advancing...');
+        console.log('Feedback timer expired. Finding next available mobile image...');
         if (isMobile) {
-          // --- Mobile Advancement Logic --- 
-          const nextIndex = currentMobileIndex + 1; // Calculate potential next index
-          if (nextIndex < mobileImageList.length) {
-            console.log('Advancing mobile index');
-            setCurrentMobileIndex(nextIndex);
-            // Clear mobile feedback state AFTER advancing index
-            nextPair(); // Call nextPair here to clear feedback state when only index advances
-          } else {
-            console.log('Reached end of mobile list, fetching next pair and resetting index RANDOMLY');
-            // Reset index to a RANDOM position in the current list to improve variety
-            const randomIndex = Math.floor(Math.random() * mobileImageList.length);
-            setCurrentMobileIndex(randomIndex); 
-            handleNextPair(); // Fetches new pair, adds to list, and calls nextPair() internally
-            console.log(`Index reset to random index ${randomIndex}, handleNextPair called.`);
+          // Filter out recently shown images
+          let availableImages = mobileImageList.filter(img => !recentMobileImageIds.includes(img.id));
+
+          // Fallback: If all images are recent (list size <= history), use the full list
+          if (availableImages.length === 0 && mobileImageList.length > 0) {
+            console.warn('All images in mobile list are in recent history. Falling back to full list.');
+            availableImages = mobileImageList;
           }
+
+          if (availableImages.length > 0) {
+            // Select a random image from the available ones
+            const nextImage = availableImages[Math.floor(Math.random() * availableImages.length)];
+            const nextIndex = mobileImageList.findIndex(img => img.id === nextImage.id);
+
+            if (nextIndex !== -1) {
+              console.log(`Advancing to mobile index ${nextIndex} (ID: ${nextImage.id}), avoiding recent images.`);
+              updateHistory(nextImage.id); // Update history with the chosen image ID
+              setCurrentMobileIndex(nextIndex); 
+            } else {
+              // Should theoretically not happen if availableImages came from mobileImageList
+              console.error('Selected available image not found in original list?');
+              // Fallback: just go to index 0
+              updateHistory(mobileImageList[0].id);
+              setCurrentMobileIndex(0);
+            }
+          } else {
+              // List is empty, cannot advance
+              console.warn('Mobile image list is empty, cannot advance index.');
+              // Fetching new pair might be handled by other logic, or we could trigger it here?
+              // For now, do nothing, wait for images to load.
+          }
+
+          // Always clear feedback state after attempting to advance
+          nextPair(); 
         } else {
           // --- Desktop Advancement Logic --- 
           console.log('Feedback timeout on desktop, calling handleNextPair');
@@ -204,7 +233,8 @@ const GameBoard: React.FC = () => {
   
     return clearExistingTimer;
   // Re-add dependencies needed for mobile logic
-  }, [state.showFeedback, handleNextPair, isMobile, currentMobileIndex, mobileImageList.length, nextPair]);
+  // Add updateHistory to dependency array
+  }, [state.showFeedback, handleNextPair, isMobile, currentMobileIndex, mobileImageList, mobileImageList.length, nextPair, recentMobileImageIds, updateHistory]);
 
   useEffect(() => {
     const clearConfettiTimer = () => {
@@ -297,6 +327,14 @@ const GameBoard: React.FC = () => {
     state.isCorrect
   ]);
 
+  // Helper function to get the current image avoiding unnecessary checks later
+  const getCurrentMobileImage = () => {
+    if (isMobile && mobileImageList.length > 0 && currentMobileIndex >= 0 && currentMobileIndex < mobileImageList.length) {
+        return mobileImageList[currentMobileIndex];
+    }
+    return null;
+  };
+
   if (error) {
     return (
       <div className="flex justify-center items-center h-64 text-red-600 text-center">
@@ -316,7 +354,7 @@ const GameBoard: React.FC = () => {
   const shuffledImages = getShuffledImages();
   
   // Mobile image to display
-  const currentMobileImage = mobileImageList[currentMobileIndex];
+  const currentMobileImage = getCurrentMobileImage();
 
   // Updated Animation variants with custom exit
   const imageVariants = {
@@ -435,7 +473,7 @@ const GameBoard: React.FC = () => {
             </div>
 
             {/* Loader - Keep hidden during feedback */}
-            {(loading && !currentMobileImage && !state.showFeedback) && (
+            {(loading && !currentMobileImage && !state.showFeedback && isInitialMobileLoad) && (
                <div className="absolute inset-0 flex justify-center items-center z-40 bg-white/50"> {/* Ensure loader is above inline feedback bg */}
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
                </div>
