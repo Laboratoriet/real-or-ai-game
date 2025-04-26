@@ -25,12 +25,25 @@ for (const path in allImageFiles) {
     // Now we know categoryImageCache[category] is defined
     const cacheEntry = categoryImageCache[category]!;
 
-    const fileIndexMatch = path.match(/^(\\d+)\\./); // Tries to match leading digits
-    const index = fileIndexMatch ? parseInt(fileIndexMatch[1], 10) : 0;
+    const filename = path.split('/').pop(); // Get the filename like "1.jpg"
+    let index: number | string | undefined = undefined;
+
+    if (filename) {
+        const fileIndexMatch = filename.match(/^(\\d+)\\./); // Match digits at the start of the filename
+        if (fileIndexMatch && fileIndexMatch[1]) {
+             index = parseInt(fileIndexMatch[1], 10);
+        } else {
+            // Fallback if no numeric prefix is found, use the filename without extension
+            index = filename.substring(0, filename.lastIndexOf('.')) || filename;
+        }
+    } else {
+        // Fallback if filename couldn't be extracted (shouldn't happen with glob pattern)
+        index = 'unknown';
+    }
 
     const image: Image = {
-      id: `${type}-${category}-${index || path.split('/').pop()}`, // Uses index OR filename
-      src: path.replace('/public', ''), 
+      id: `${type}-${category}-${index}`, // Use the extracted index or fallback string
+      src: path.replace('/public', ''),
       category: category,
       isAI: type === 'ai',
     };

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ImagePair, Image, Category } from '../types';
 import { getCategoryImages, availableCategories } from '../data/images';
 
-const RECENT_HISTORY_LENGTH = 15; // Keep history length
+const RECENT_HISTORY_LENGTH = 50; // Keep history length
 
 export const useImagePair = () => {
   const [currentPair, setCurrentPair] = useState<ImagePair | null>(null);

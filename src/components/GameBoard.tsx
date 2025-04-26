@@ -161,13 +161,15 @@ const GameBoard: React.FC = () => {
   const x = useMotionValue(0);
 
   const threshold = 25;
-  const maxDrag = 130;
+  const maxDrag = 150; // Increased slightly from 130
 
-  // Opacity mapping: AI Left, Real Right (Reverted)
-  const aiOpacity = useTransform(x, [-maxDrag, -threshold, 0], [1, 0, 0]); // AI fades on LEFT drag
-  const realOpacity = useTransform(x, [0, threshold, maxDrag], [0, 0, 1]); // Real fades on RIGHT drag
+  // Opacity mapping: AI Left, Real Right
+  // Make overlays become opaque a bit sooner (e.g., at 80% of maxDrag)
+  const aiOpacity = useTransform(x, [-maxDrag * 0.8, -threshold, 0], [1, 0, 0]); // AI fades on LEFT drag
+  const realOpacity = useTransform(x, [0, threshold, maxDrag * 0.8], [0, 0, 1]); // Real fades on RIGHT drag
   const rotate = useTransform(x, [-maxDrag * 1.5, maxDrag * 1.5], [-15, 15], { clamp: false });
-  const imageOpacity = useTransform(x, [-maxDrag, 0, maxDrag], [0.6, 1, 0.6]); // Image fades towards edges (subtler)
+  // Make image fade more significantly during drag
+  const imageOpacity = useTransform(x, [-maxDrag, -maxDrag * 0.5, 0, maxDrag * 0.5, maxDrag], [0.3, 0.7, 1, 0.7, 0.3]);
 
 
   // Function to handle drag end
@@ -193,7 +195,8 @@ const GameBoard: React.FC = () => {
         // queueMicrotask(() => x.set(0)); // Not needed?
     } else {
         // Animate back to center if swipe wasn't strong enough
-        animate(x, 0, { type: "spring", stiffness: 300, damping: 30 });
+        // Make snap-back slightly tighter
+        animate(x, 0, { type: "spring", stiffness: 350, damping: 35 });
         setSwipeDirectionForExit(null);
     }
   };
@@ -240,6 +243,7 @@ const GameBoard: React.FC = () => {
     // Get the ID of the image that was just shown
     const shownImageId = mobileImageList[currentMobileIndex]?.id;
     let nextSeenIds = seenMobileImageIds; // Start with current seen set
+    let chosenNextIndex = -1; // Initialize chosen index
 
     if (shownImageId) {
        // Calculate the next state of seen IDs *before* filtering
@@ -249,65 +253,84 @@ const GameBoard: React.FC = () => {
         console.warn('[Advancement Effect] Could not get ID of current mobile image to add to seen set.');
     }
 
-    // --- Mobile Advancement Logic (using nextSeenIds for filtering) ---
-    let chosenNextIndex = -1;
-
-    // Filter OUT seen images using the *calculated* next set
+    // Filter the list to get images not yet seen in this session
     const availableImages = mobileImageList.filter(img => !nextSeenIds.has(img.id));
-
-    console.log(`[Advancement Effect] Filtered List Size (excluding next seen): ${availableImages.length} (Original: ${mobileImageList.length}, Next Seen: ${nextSeenIds.size})`);
-
-    // Update the seen IDs state *after* calculating available images
-    if (shownImageId) {
-       setSeenMobileImageIds(nextSeenIds);
-    }
+    console.log(`[Advancement Effect] Images in list: ${mobileImageList.length}, Images seen this session (including current): ${nextSeenIds.size}, Available unseen images: ${availableImages.length}`);
 
     if (availableImages.length > 0) {
-      const nextImage = availableImages[Math.floor(Math.random() * availableImages.length)];
-      const nextIndex = mobileImageList.findIndex(img => img.id === nextImage.id);
+      // Try to pick a random available image that isn't the one just shown
+      let attempts = 0;
+      const maxAttempts = availableImages.length > 1 ? 5 : 1; // Allow retries only if there's > 1 option
+      let nextImage: Image | null = null;
 
-      if (nextIndex !== -1) {
-        chosenNextIndex = nextIndex;
-        console.log(`[Advancement Effect] Selected next mobile index ${chosenNextIndex} (ID: ${nextImage.id}).`);
+      do {
+          nextImage = availableImages[Math.floor(Math.random() * availableImages.length)];
+          attempts++;
+          // Keep picking if it's the same as the shown one AND there are other options AND we haven't tried too much
+      } while (
+          nextImage?.id === shownImageId &&
+          availableImages.length > 1 &&
+          attempts < maxAttempts
+      );
 
-         // Proactive prefetching if unseen pool is low
-        if (availableImages.length <= PREFETCH_THRESHOLD) {
-            console.log(`[Advancement Effect] Unseen image pool (${availableImages.length}) low. Fetching ${FETCH_COUNT} more pairs.`);
-            for (let i = 0; i < FETCH_COUNT; i++) {
-                generateRandomPair(); // Fire and forget
+      if (nextImage) {
+        const nextIndex = mobileImageList.findIndex(img => img.id === nextImage!.id);
+        if (nextIndex !== -1) {
+            chosenNextIndex = nextIndex;
+            console.log(`[Advancement Effect] Selected next mobile index ${chosenNextIndex} (ID: ${nextImage.id}). Was it the same as previous? ${nextImage.id === shownImageId}`);
+
+            // Proactive prefetching if unseen pool is low (consider adjusting threshold)
+            if (availableImages.length <= PREFETCH_THRESHOLD + 1) { // +1 because we just picked one
+                console.log(`[Advancement Effect] Unseen image pool (${availableImages.length -1}) low. Fetching ${FETCH_COUNT} more pairs.`);
+                for (let i = 0; i < FETCH_COUNT; i++) {
+                    generateRandomPair(); // Fire and forget
+                }
             }
+        } else {
+           console.error('[Advancement Effect] Selected available image not found in original list? This should not happen.');
+           // Fallback: Maybe pick the first available?
+           const fallbackIndex = mobileImageList.findIndex(img => img.id === availableImages[0].id);
+           chosenNextIndex = fallbackIndex !== -1 ? fallbackIndex : 0;
         }
-
       } else {
-        // This case should theoretically not happen if filter/findIndex logic is correct
-        console.error('[Advancement Effect] Selected available image not found in original list?');
-        // Fallback: Try showing the first image overall?
-        chosenNextIndex = 0;
+          // Should not happen if availableImages.length > 0
+          console.error('[Advancement Effect] Could not select an image even though available list was not empty.');
+          chosenNextIndex = 0; // Fallback
       }
+
     } else {
       console.warn('[Advancement Effect] No unseen images available in the current mobile list. Fetching more...');
        // Aggressively fetch more images
-      for (let i = 0; i < FETCH_COUNT; i++) {
+      for (let i = 0; i < FETCH_COUNT * 2; i++) { // Fetch more aggressively
           generateRandomPair(); // Fire and forget
       }
        // Don't advance index yet, wait for new images to load via useEffect [currentPair]
        // If generateRandomPair consistently fails to provide new unique images,
-       // we might get stuck showing the last image until reset.
+       // we might get stuck showing the last image until reset. Consider a fallback?
+       // For now, we don't change the index if no unseen images are available.
     }
 
     // Set the calculated index state only if a valid one was found
-    // If no unseen images were found, index remains unchanged until new ones load.
     if (chosenNextIndex !== -1) {
          setCurrentMobileIndex(chosenNextIndex);
+         // Update the seen set *after* successfully choosing the next index
+         setSeenMobileImageIds(nextSeenIds);
+    } else {
+        // If we couldn't find a new index (e.g., only seen images available),
+        // we still need to update the seen set with the one just shown.
+        // This prevents getting stuck if fetching fails.
+        setSeenMobileImageIds(nextSeenIds);
+        console.log('[Advancement Effect] No suitable next index found, only updating seen set.');
     }
 
-    // Clear feedback state and reset the flag regardless of finding a new image
-    nextPair();
-    setNeedsMobileAdvance(false);
-    console.log('[Advancement Effect] Advancement attempt complete. Flag reset.');
 
-  // Dependencies need to cover state reads inside the effect and function calls
-  }, [needsMobileAdvance, isMobile, mobileImageList, currentMobileIndex, seenMobileImageIds, generateRandomPair, nextPair]);
+    // Clear feedback state and reset the flag regardless of finding a new image
+    nextPair(); // Resets feedback state in useGameState
+    setNeedsMobileAdvance(false);
+
+  // Only run when the flag is set true, mobile view active, and list has items. Add seenMobileImageIds as dependency?
+  // Adding it could cause loops if state update triggers effect. Let's rely on needsMobileAdvance.
+  }, [needsMobileAdvance, isMobile, mobileImageList, currentMobileIndex, nextPair, generateRandomPair, seenMobileImageIds]); // Added seenMobileImageIds
 
   useEffect(() => {
     const clearConfettiTimer = () => {
@@ -497,7 +520,8 @@ const GameBoard: React.FC = () => {
                     className="absolute w-full h-full z-10 cursor-grab overflow-hidden rounded-lg" // Removed shadow-md
                     drag="x"
                     dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                    style={{ x, rotate, opacity: imageOpacity }} // Apply imageOpacity here
+                    // Apply touchAction style here to prevent scroll conflict
+                    style={{ x, rotate, opacity: imageOpacity, touchAction: 'pan-y' }}
                     onDragEnd={handleDragEnd}
                     variants={imageVariants}
                     initial="hidden"
