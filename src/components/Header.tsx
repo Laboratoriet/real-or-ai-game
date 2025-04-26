@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { ImageIcon } from 'lucide-react';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -31,8 +30,8 @@ const Header: React.FC = () => {
         <a href="https://alkemist.no" target="_blank" rel="noopener noreferrer" aria-label="Alkemist Homepage">
           <img src="/alkemist-logo/Alkemist-logo.svg" alt="Alkemist Logo" className="h-4" />
         </a>
-        <div className="flex items-center space-x-2">
-          <ImageIcon className="h-5 w-5 text-gray-700" />
+        <div className="flex items-center space-x-1.5">
+          <img src="/realorai.png" alt="Icon" className="h-6 w-auto" />
           <h1 className="text-lg font-medium text-gray-700">Real or AI?</h1>
         </div>
       </div>
