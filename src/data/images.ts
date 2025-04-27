@@ -77,3 +77,45 @@ export const getCategoryImages = (category: Category): { real: Image[], ai: Imag
     return { real: [], ai: [] }; // Return empty arrays if category not truly available
   }
 };
+
+// --- NEW FUNCTION ---
+// Helper to shuffle an array (Fisher-Yates)
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffledArray = [...array];
+  for (let i = shuffledArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+  }
+  return shuffledArray;
+};
+
+/**
+ * Gathers all unique images from all categories stored in the cache.
+ * @returns A shuffled array of unique Image objects.
+ */
+export const getAllUniqueImages = (): Image[] => {
+  const allImages: Image[] = [];
+  const seenIds = new Set<string>();
+
+  for (const category in categoryImageCache) {
+    const entry = categoryImageCache[category as Category];
+    if (entry) {
+      // Add real images, checking for duplicates
+      entry.real.forEach(image => {
+        if (!seenIds.has(image.id)) {
+          allImages.push(image);
+          seenIds.add(image.id);
+        }
+      });
+      // Add AI images, checking for duplicates
+      entry.ai.forEach(image => {
+        if (!seenIds.has(image.id)) {
+          allImages.push(image);
+          seenIds.add(image.id);
+        }
+      });
+    }
+  }
+  console.log(`[getAllUniqueImages] Found ${allImages.length} unique images across all categories.`);
+  return shuffleArray(allImages);
+};

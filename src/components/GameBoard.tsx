@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useImagePair } from '../hooks/useImagePair';
 import { useGameState } from '../hooks/useGameState';
-// import CategorySelector from './CategorySelector'; // Removed
+import { getAllUniqueImages } from '../data/images'; // Import the new function
 import ImageCard from './ImageCard';
 import Feedback from './Feedback';
 import ScoreDisplay from './ScoreDisplay';
@@ -10,10 +10,8 @@ import Confetti from 'react-confetti';
 import { Image } from '../types'; // Use Image type
 
 const MOBILE_BREAKPOINT = 768; // Define a breakpoint
-// Removed MOBILE_HISTORY_LENGTH
-const PREFETCH_THRESHOLD = 5; // When unseen images drop below this, fetch more
-const FETCH_COUNT = 4; // How many pairs to fetch when needed
-
+// const FETCH_COUNT = 4; // How many pairs to fetch when needed - Might not be needed for mobile now
+const UNIQUE_DISPLAY_COUNT_TARGET = 50; // How many unique images to guarantee
 
 // Simple hook to get window size
 function useWindowSize() {
@@ -30,7 +28,7 @@ function useWindowSize() {
   return size;
 }
 
-// Helper function to shuffle an array
+// Helper function to shuffle an array (Fisher-Yates)
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffledArray = [...array];
   for (let i = shuffledArray.length - 1; i > 0; i--) {
@@ -45,406 +43,311 @@ const GameBoard: React.FC = () => {
     state,
     selectImage,
     showFeedback,
-    nextPair,
+    nextPair, // Still needed for resetting feedback state
     resetGame,
   } = useGameState();
 
+  // Desktop view still uses useImagePair
   const {
     currentPair,
-    loading,
-    error,
+    loading: pairLoading, // Rename to avoid conflict
+    error: pairError,
     generateRandomPair,
     getShuffledImages,
   } = useImagePair();
 
-  const nextPairTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const nextActionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { width, height } = useWindowSize();
   const isMobile = width < MOBILE_BREAKPOINT;
 
-  // State for mobile view
-  const [mobileImageList, setMobileImageList] = useState<Image[]>([]);
-  const [currentMobileIndex, setCurrentMobileIndex] = useState(0);
-  const [isInitialMobileLoad, setIsInitialMobileLoad] = useState(true); // Track initial load for mobile
-  const [swipeDirectionForExit, setSwipeDirectionForExit] = useState<'left' | 'right' | null>(null); // State for exit animation
-  // Use Set for efficient tracking of all seen image IDs this session
-  const [seenMobileImageIds, setSeenMobileImageIds] = useState<Set<string>>(new Set());
-  const [needsMobileAdvance, setNeedsMobileAdvance] = useState<boolean>(false); // State to trigger advancement
-  // Removed updateHistory hook
+  // --- Mobile State --- 
+  const [masterMobileList, setMasterMobileList] = useState<Image[]>([]);
+  const [currentMobileImage, setCurrentMobileImage] = useState<Image | null>(null);
+  const [masterMobileIndex, setMasterMobileIndex] = useState(0);
+  const [uniqueImagesShownCount, setUniqueImagesShownCount] = useState(0);
+  const [mobileLoading, setMobileLoading] = useState(true);
+  const [mobileError, setMobileError] = useState<string | null>(null);
+  // State to block interactions during mobile advancement
+  const [isAdvancing, setIsAdvancing] = useState(false);
 
+  // State for swipe/exit animation (used by both)
+  const [swipeDirectionForExit, setSwipeDirectionForExit] = useState<'left' | 'right' | null>(null);
+  // Ref for drag position (used by mobile)
+  const x = useMotionValue(0);
 
-  // Reset seen images on game reset
+  // --- Initialization and Reset Logic ---
+  const initializeMobileGame = useCallback(() => {
+    console.log("[Mobile Init] Initializing mobile game...");
+    setMobileLoading(true);
+    setMobileError(null);
+    try {
+      const allImages = getAllUniqueImages();
+      if (allImages.length === 0) {
+        console.error('[Mobile Init] No unique images found!');
+        setMobileError('No images available for the game.');
+        setMasterMobileList([]);
+        setCurrentMobileImage(null);
+      } else {
+        console.log(`[Mobile Init] Setting master list with ${allImages.length} images.`);
+        setMasterMobileList(allImages);
+        setCurrentMobileImage(allImages[0]); // Set the first image
+        setMasterMobileIndex(0);
+        setUniqueImagesShownCount(0);
+      }
+    } catch (err) {
+        console.error('[Mobile Init] Error getting unique images:', err);
+        setMobileError('Failed to load images.');
+    }
+    setMobileLoading(false);
+  }, []);
+
+  // Initialize on mount if mobile
+  useEffect(() => {
+    if (isMobile) {
+      console.log("Effect: isMobile is true, initializing mobile...");
+      initializeMobileGame();
+    } else {
+       // If starting on desktop, generate initial pair ONLY if not already loaded
+       console.log("Effect: isMobile is false, checking desktop pair...");
+       if (!currentPair) {
+         console.log("Effect: Desktop pair not loaded, generating...");
+         generateRandomPair();
+       } else {
+         console.log("Effect: Desktop pair already loaded.");
+       }
+    }
+    // Cleanup ref on unmount
+    return () => {
+       if (nextActionTimerRef.current) clearTimeout(nextActionTimerRef.current);
+       if (confettiTimerRef.current) clearTimeout(confettiTimerRef.current);
+    }
+    // Dependencies: Run when isMobile changes, or on initial mount for the correct mode logic.
+    // initializeMobileGame and generateRandomPair are stable callbacks.
+  }, [isMobile, initializeMobileGame, generateRandomPair]); // Removed currentPair
+
   const handleResetGame = () => {
-    console.log("Resetting game and seen images...");
-    resetGame();
-    setSeenMobileImageIds(new Set());
-    setMobileImageList([]); // Clear list to force refetch
-    setCurrentMobileIndex(0);
-    setIsInitialMobileLoad(true);
-    // Immediately fetch initial pair after reset
-    generateRandomPair();
+    console.log("Resetting game...");
+    resetGame(); // Reset score, streak etc.
+    // Clear confetti if showing
+    if (confettiTimerRef.current) clearTimeout(confettiTimerRef.current);
+    setShowConfetti(false);
+
+    if (isMobile) {
+      initializeMobileGame(); // Re-initialize mobile state
+    } else {
+      generateRandomPair(); // Fetch new pair for desktop
+    }
   };
 
+  // --- Desktop Image Selection ---
   const handleImageSelect = (imageId: string) => {
-    if (state.selectedImageId || state.showFeedback) return;
-
+    if (state.selectedImageId || state.showFeedback || isMobile) return;
     selectImage(imageId);
-
     if (currentPair) {
       const isCorrect = imageId === currentPair.realImage.id;
       showFeedback(isCorrect);
     }
   };
 
-  const handleNextPair = useCallback(() => {
-    if (nextPairTimerRef.current) {
-      clearTimeout(nextPairTimerRef.current);
-      nextPairTimerRef.current = null;
-    }
-    nextPair();
-    generateRandomPair();
-  }, [nextPair, generateRandomPair]);
-
-  // Mobile: Handle guessing via buttons
+  // --- Mobile Guessing Logic ---
   const handleMobileGuess = (guess: 'real' | 'ai') => {
-    if (state.showFeedback || !mobileImageList[currentMobileIndex]) return;
-
-    const currentImage = mobileImageList[currentMobileIndex];
-    const isCorrect = (guess === 'real' && !currentImage.isAI) || (guess === 'ai' && currentImage.isAI);
-
-    // Use game state's feedback mechanism
+    if (state.showFeedback || !currentMobileImage || !isMobile || isAdvancing) return;
+    const isCorrect = (guess === 'real' && !currentMobileImage.isAI) || (guess === 'ai' && currentMobileImage.isAI);
     showFeedback(isCorrect);
   };
 
-  // Function to add new pair images to the mobile list (if not already present) and shuffle
-  const updateMobileList = useCallback((newReal: Image, newAi: Image) => {
-    setMobileImageList(prevList => {
-      console.log(`[updateMobileList] Attempting to add: Real ID=${newReal.id}, AI ID=${newAi.id}. Current list size: ${prevList.length}`);
-      const existingIds = new Set(prevList.map(img => img.id));
-      const newList = [...prevList];
-      let added = false;
+  // --- Mobile Advancement Logic --- 
+  const advanceMobileImage = useCallback(() => {
+    console.log('[Mobile Advance] Advancing...');
+    setIsAdvancing(true); // Block interactions START
 
-      if (!existingIds.has(newReal.id)) {
-        newList.push(newReal);
-        added = true;
-      }
-      if (!existingIds.has(newAi.id)) {
-        newList.push(newAi);
-        added = true;
-      }
+    let nextIndex = masterMobileIndex + 1;
+    let currentList = masterMobileList;
+    let newUniqueCount = uniqueImagesShownCount + 1;
+    let needsReshuffle = false;
 
-      // Check if the list actually grew before shuffling
-      if (added) {
-        console.log(`[updateMobileList] Added new images. Shuffling. New list size: ${newList.length}`);
-        return shuffleArray(newList); // Shuffle only if list grew
+    // Check if we need to reshuffle (either reached target unique count or end of list)
+    if (newUniqueCount >= UNIQUE_DISPLAY_COUNT_TARGET || nextIndex >= currentList.length) {
+      // Only log reshuffle reason if list has items
+      if (currentList.length > 0) {
+         console.warn(`[Mobile Advance] Reshuffling master list. Reason: ${newUniqueCount >= UNIQUE_DISPLAY_COUNT_TARGET ? 'Reached unique target' : 'End of list'}. Unique shown: ${newUniqueCount}`);
+         needsReshuffle = true;
+      } else {
+         console.error('[Mobile Advance] Cannot advance, master list is empty.');
+         setCurrentMobileImage(null); // No image to show
+         return;
       }
-      console.log(`[updateMobileList] No new images added (already exist). List size remains: ${prevList.length}`);
-      return prevList; // Return previous list if no change
-    });
-  // Dependency array is empty as it relies on args and setMobileImageList
-  }, []);
-
-  // Effect to populate mobile list when a new pair is loaded
-  useEffect(() => {
-    if (currentPair && isMobile) { // Only populate if mobile
-      updateMobileList(currentPair.realImage, currentPair.aiImage);
-       // Update initial load flag only after list is potentially populated
-       if (isInitialMobileLoad && mobileImageList.length > 0) {
-        setIsInitialMobileLoad(false);
+      
+      currentList = shuffleArray([...currentList]); // Reshuffle the list
+      setMasterMobileList(currentList); // Update state with shuffled list
+      nextIndex = 0; // Reset index to the start of the shuffled list
+      // Reset unique count *only if* reshuffling because target was met
+      if (newUniqueCount >= UNIQUE_DISPLAY_COUNT_TARGET) {
+          newUniqueCount = 0;
       }
     }
-  // Added isMobile and length dependency, ensure updateMobileList is stable
-  }, [currentPair, updateMobileList, isInitialMobileLoad, isMobile, mobileImageList.length]);
 
-  // --- Motion Values for Drag Animation ---
-  const x = useMotionValue(0);
-
-  const threshold = 25;
-  const maxDrag = 150; // Increased slightly from 130
-
-  // Opacity mapping: AI Left, Real Right
-  // Make overlays become opaque a bit sooner (e.g., at 80% of maxDrag)
-  const aiOpacity = useTransform(x, [-maxDrag * 0.8, -threshold, 0], [1, 0, 0]); // AI fades on LEFT drag
-  const realOpacity = useTransform(x, [0, threshold, maxDrag * 0.8], [0, 0, 1]); // Real fades on RIGHT drag
-  const rotate = useTransform(x, [-maxDrag * 1.5, maxDrag * 1.5], [-15, 15], { clamp: false });
-  // Make image fade more significantly during drag
-  const imageOpacity = useTransform(x, [-maxDrag, -maxDrag * 0.5, 0, maxDrag * 0.5, maxDrag], [0.3, 0.7, 1, 0.7, 0.3]);
-
-
-  // Function to handle drag end
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number, y: number }, velocity: { x: number, y: number } }) => {
-    const dragThreshold = 100;
-    const velocityThreshold = 300;
-    let direction: 'left' | 'right' | null = null;
-
-    // Reverted direction assignment
-    if (info.offset.x < -dragThreshold || info.velocity.x < -velocityThreshold) {
-        direction = 'left'; // Left swipe = AI Guess
-    } else if (info.offset.x > dragThreshold || info.velocity.x > velocityThreshold) {
-        direction = 'right'; // Right swipe = Real Guess
+    // Ensure the list is not empty after potential shuffle
+    if (currentList.length === 0) {
+      console.error('[Mobile Advance] Master list empty after potential reshuffle.');
+      setCurrentMobileImage(null);
+      return;
+    }
+    
+    // Handle potential infinite loop if list has only 1 item and we reshuffle
+    if (currentList.length === 1 && needsReshuffle) {
+        console.warn('[Mobile Advance] List has only one item, cannot guarantee different image after reshuffle.');
     }
 
-    if (direction) {
-        // Logic based on direction's meaning (Left=AI, Right=Real)
-        const guess = direction === 'left' ? 'ai' : 'real';
-        console.log(`Swipe ${direction} triggered guess: ${guess}`);
-        handleMobileGuess(guess);
-        setSwipeDirectionForExit(direction);
-        // Reset x smoothly - Framer Motion handles this if not exited
-        // queueMicrotask(() => x.set(0)); // Not needed?
-    } else {
-        // Animate back to center if swipe wasn't strong enough
-        // Make snap-back slightly tighter
-        animate(x, 0, { type: "spring", stiffness: 350, damping: 35 });
-        setSwipeDirectionForExit(null);
-    }
-  };
+    setCurrentMobileImage(currentList[nextIndex]);
+    setMasterMobileIndex(nextIndex);
+    setUniqueImagesShownCount(newUniqueCount);
+    console.log(`[Mobile Advance] New index: ${nextIndex}, New unique count: ${newUniqueCount}`);
+    
+    // Reset swipe animation state
+    setSwipeDirectionForExit(null);
+    x.set(0);
+    
+    // Reset feedback state using game state hook
+    nextPair(); 
 
-  // Effect for feedback timeout
+    setIsAdvancing(false); // Unblock interactions END
+
+  }, [masterMobileList, masterMobileIndex, uniqueImagesShownCount, nextPair, x]);
+
+  // --- Feedback Timer --- (Simplified)
   useEffect(() => {
     const clearExistingTimer = () => {
-      if (nextPairTimerRef.current) {
-        clearTimeout(nextPairTimerRef.current);
-        nextPairTimerRef.current = null;
+      if (nextActionTimerRef.current) {
+        clearTimeout(nextActionTimerRef.current);
+        nextActionTimerRef.current = null;
       }
     };
 
     if (state.showFeedback) {
       clearExistingTimer();
       console.log('Setting feedback timer...');
-      nextPairTimerRef.current = setTimeout(() => {
-        // Reset swipe direction regardless of mode
+      nextActionTimerRef.current = setTimeout(() => {
         if (isMobile) {
-          console.log('Feedback timer expired (Mobile). Setting flag to advance.');
-          setNeedsMobileAdvance(true); // Set flag instead of calculating here
+          advanceMobileImage();
         } else {
-          // --- Desktop Advancement Logic ---
-          console.log('Feedback timeout on desktop, calling handleNextPair');
-          setSwipeDirectionForExit(null); // Reset swipe for desktop here
-          handleNextPair();
+          // Desktop: Reset feedback and fetch next pair
+          nextPair(); 
+          generateRandomPair();
         }
-      }, 750); // Reduced from 1500ms
+      }, 1500);
     }
 
     return clearExistingTimer;
-  // Reduced dependencies - relies on advancement effect for index logic
-  }, [state.showFeedback, handleNextPair, isMobile, nextPair]);
+  }, [state.showFeedback, isMobile, advanceMobileImage, nextPair, generateRandomPair]);
 
-
-  // Effect to handle mobile advancement when flag is set
-  useEffect(() => {
-    // Ensure this runs only when needed and possible
-    if (!needsMobileAdvance || !isMobile || mobileImageList.length === 0) return;
-
-    console.log('[Advancement Effect] Flag is true. Calculating next mobile index...');
-    setSwipeDirectionForExit(null); // Reset swipe for mobile here
-
-    // Get the ID of the image that was just shown
-    const shownImageId = mobileImageList[currentMobileIndex]?.id;
-    let nextSeenIds = seenMobileImageIds; // Start with current seen set
-    let chosenNextIndex = -1; // Initialize chosen index
-
-    if (shownImageId) {
-       // Calculate the next state of seen IDs *before* filtering
-       nextSeenIds = new Set(seenMobileImageIds).add(shownImageId);
-       console.log(`[Advancement Effect] ID just shown: ${shownImageId}. Next seen count: ${nextSeenIds.size}`);
-    } else {
-        console.warn('[Advancement Effect] Could not get ID of current mobile image to add to seen set.');
-    }
-
-    // Filter the list to get images not yet seen in this session
-    const availableImages = mobileImageList.filter(img => !nextSeenIds.has(img.id));
-    console.log(`[Advancement Effect] Images in list: ${mobileImageList.length}, Images seen this session (including current): ${nextSeenIds.size}, Available unseen images: ${availableImages.length}`);
-
-    if (availableImages.length > 0) {
-      // Try to pick a random available image that isn't the one just shown
-      let attempts = 0;
-      const maxAttempts = availableImages.length > 1 ? 5 : 1; // Allow retries only if there's > 1 option
-      let nextImage: Image | null = null;
-
-      do {
-          nextImage = availableImages[Math.floor(Math.random() * availableImages.length)];
-          attempts++;
-          // Keep picking if it's the same as the shown one AND there are other options AND we haven't tried too much
-      } while (
-          nextImage?.id === shownImageId &&
-          availableImages.length > 1 &&
-          attempts < maxAttempts
-      );
-
-      if (nextImage) {
-        const nextIndex = mobileImageList.findIndex(img => img.id === nextImage!.id);
-        if (nextIndex !== -1) {
-            chosenNextIndex = nextIndex;
-            console.log(`[Advancement Effect] Selected next mobile index ${chosenNextIndex} (ID: ${nextImage.id}). Was it the same as previous? ${nextImage.id === shownImageId}`);
-
-            // Proactive prefetching if unseen pool is low (consider adjusting threshold)
-            if (availableImages.length <= PREFETCH_THRESHOLD + 1) { // +1 because we just picked one
-                console.log(`[Advancement Effect] Unseen image pool (${availableImages.length -1}) low. Fetching ${FETCH_COUNT} more pairs.`);
-                for (let i = 0; i < FETCH_COUNT; i++) {
-                    generateRandomPair(); // Fire and forget
-                }
-            }
-        } else {
-           console.error('[Advancement Effect] Selected available image not found in original list? This should not happen.');
-           // Fallback: Maybe pick the first available?
-           const fallbackIndex = mobileImageList.findIndex(img => img.id === availableImages[0].id);
-           chosenNextIndex = fallbackIndex !== -1 ? fallbackIndex : 0;
-        }
-      } else {
-          // Should not happen if availableImages.length > 0
-          console.error('[Advancement Effect] Could not select an image even though available list was not empty.');
-          chosenNextIndex = 0; // Fallback
-      }
-
-    } else {
-      console.warn('[Advancement Effect] No unseen images available in the current mobile list. Fetching more...');
-       // Aggressively fetch more images
-      for (let i = 0; i < FETCH_COUNT * 2; i++) { // Fetch more aggressively
-          generateRandomPair(); // Fire and forget
-      }
-       // Don't advance index yet, wait for new images to load via useEffect [currentPair]
-       // If generateRandomPair consistently fails to provide new unique images,
-       // we might get stuck showing the last image until reset. Consider a fallback?
-       // For now, we don't change the index if no unseen images are available.
-    }
-
-    // Set the calculated index state only if a valid one was found
-    if (chosenNextIndex !== -1) {
-         setCurrentMobileIndex(chosenNextIndex);
-         // Update the seen set *after* successfully choosing the next index
-         setSeenMobileImageIds(nextSeenIds);
-    } else {
-        // If we couldn't find a new index (e.g., only seen images available),
-        // we still need to update the seen set with the one just shown.
-        // This prevents getting stuck if fetching fails.
-        setSeenMobileImageIds(nextSeenIds);
-        console.log('[Advancement Effect] No suitable next index found, only updating seen set.');
-    }
-
-
-    // Clear feedback state and reset the flag regardless of finding a new image
-    nextPair(); // Resets feedback state in useGameState
-    setNeedsMobileAdvance(false);
-
-  // Only run when the flag is set true, mobile view active, and list has items. Add seenMobileImageIds as dependency?
-  // Adding it could cause loops if state update triggers effect. Let's rely on needsMobileAdvance.
-  }, [needsMobileAdvance, isMobile, mobileImageList, currentMobileIndex, nextPair, generateRandomPair, seenMobileImageIds]); // Added seenMobileImageIds
-
-  useEffect(() => {
+  // --- Confetti Effect (Keep) ---
+   useEffect(() => {
     const clearConfettiTimer = () => {
       if (confettiTimerRef.current) {
         clearTimeout(confettiTimerRef.current);
         confettiTimerRef.current = null;
       }
     };
-
     if (state.showFeedback && state.isCorrect && state.correctStreak > 0 && state.correctStreak % 10 === 0) {
-      console.log(`[Confetti Effect] Triggering for streak ${state.correctStreak}`);
       setShowConfetti(true);
       clearConfettiTimer();
-      confettiTimerRef.current = setTimeout(() => {
-        console.log('[Confetti Effect] Stopping after 5 seconds');
-        setShowConfetti(false);
-      }, 5000);
-    } else if (!state.showFeedback) { // Stop confetti if feedback disappears before timer
-        // setShowConfetti(false); // Maybe not necessary if timer is short
+      confettiTimerRef.current = setTimeout(() => setShowConfetti(false), 5000);
+    } else if (!state.showFeedback) {
+       // Optional: stop confetti immediately if feedback dismissed early
     }
-
     return clearConfettiTimer;
   }, [state.isCorrect, state.correctStreak, state.showFeedback]);
 
-
-  // Effect to handle keyboard input (modified for mobile)
+  // --- Adjusted Keyboard Handler ---
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Prevent default browser scroll for arrow keys we handle
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === '1' || event.key === '2') {
         event.preventDefault();
       }
 
-      // Guard: Do nothing further if feedback is showing, an image is selected (desktop), or images aren't loaded
-      // Use getCurrentMobileImage for mobile check
-      if (state.showFeedback || loading || (!currentPair && !getCurrentMobileImage())) {
-        return;
-      }
+      // Simplified Guard
+      if (state.showFeedback || isAdvancing) return;
 
       if (isMobile) {
-        // Mobile: Handle '1' for Real, '2' for AI
-        if (event.key === '1') { // '1' key for Real
-          handleMobileGuess('real');
-        } else if (event.key === '2') { // '2' key for AI
-          handleMobileGuess('ai');
-        }
+         if (!currentMobileImage || mobileLoading) return; // Guard against no image or loading
+         if (event.key === '1') handleMobileGuess('real');
+         else if (event.key === '2') handleMobileGuess('ai');
       } else {
-        // Desktop: Handle Arrow Keys
-        if (state.selectedImageId) return;
-        const currentShuffledImages = getShuffledImages();
-        if (currentShuffledImages.length !== 2) return;
-
-        let selectedImageId: string | null = null;
-        if (event.key === 'ArrowLeft') {
-          selectedImageId = currentShuffledImages[0].id;
-        } else if (event.key === 'ArrowRight') {
-          selectedImageId = currentShuffledImages[1].id;
-        }
-
-        if (selectedImageId) {
-          // Desktop selection logic
-          handleImageSelect(selectedImageId); // Re-use existing function
-          // Feedback and next pair handled by handleImageSelect/handleNextPair
-        }
+         // Desktop Logic
+         if (pairLoading || !currentPair || state.selectedImageId) return;
+         const currentShuffledImages = getShuffledImages();
+         if (currentShuffledImages.length !== 2) return;
+         let selectedImageId: string | null = null;
+         if (event.key === 'ArrowLeft') selectedImageId = currentShuffledImages[0].id;
+         else if (event.key === 'ArrowRight') selectedImageId = currentShuffledImages[1].id;
+         if (selectedImageId) handleImageSelect(selectedImageId);
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
-
-    // Cleanup function to remove listener
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  // Ensure dependencies are correct
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     isMobile,
     state.showFeedback,
     state.selectedImageId,
-    loading,
+    pairLoading,
+    mobileLoading,
     currentPair,
-    // mobileImageList, // Use getCurrentMobileImage instead
-    // currentMobileIndex, // Use getCurrentMobileImage instead
+    currentMobileImage,
     getShuffledImages,
-    // selectImage, // Included via handleImageSelect
-    // showFeedback, // Included via handleMobileGuess/handleImageSelect
-    handleNextPair, // Still needed for desktop timeout? No, handleImageSelect does it.
     handleMobileGuess,
     handleImageSelect,
-    // state.isCorrect // Not directly needed here
+    isAdvancing,
   ]);
 
-  // Helper function to get the current image avoiding unnecessary checks later
-  const getCurrentMobileImage = useCallback(() => {
-    if (isMobile && mobileImageList.length > 0 && currentMobileIndex >= 0 && currentMobileIndex < mobileImageList.length) {
-        return mobileImageList[currentMobileIndex];
-    }
-    return null;
-  }, [isMobile, mobileImageList, currentMobileIndex]); // Dependencies for the callback
+  // --- Motion Values for Drag Animation (Keep) ---
+  // const x = useMotionValue(0);
+  const threshold = 25;
+  const maxDrag = 150;
+  const aiOpacity = useTransform(x, [-maxDrag * 0.8, -threshold, 0], [1, 0, 0]);
+  const realOpacity = useTransform(x, [0, threshold, maxDrag * 0.8], [0, 0, 1]);
+  const rotate = useTransform(x, [-maxDrag * 1.5, maxDrag * 1.5], [-15, 15], { clamp: false });
+  const imageOpacity = useTransform(x, [-maxDrag, -maxDrag * 0.5, 0, maxDrag * 0.5, maxDrag], [0.3, 0.7, 1, 0.7, 0.3]);
 
+  // --- Drag End Handler (Keep, simplify swipe direction setting) ---
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number, y: number }, velocity: { x: number, y: number } }) => {
+    const dragThreshold = 100;
+    const velocityThreshold = 300;
+    let direction: 'left' | 'right' | null = null;
+
+    // Add isAdvancing guard here too
+    if (isAdvancing || state.showFeedback) {
+       // If advancing or showing feedback, just snap back
+       animate(x, 0, { type: "spring", stiffness: 350, damping: 35 });
+       setSwipeDirectionForExit(null);
+       return;
+    }
+
+    if (info.offset.x < -dragThreshold || info.velocity.x < -velocityThreshold) direction = 'left'; // Left swipe = AI Guess
+    else if (info.offset.x > dragThreshold || info.velocity.x > velocityThreshold) direction = 'right'; // Right swipe = Real Guess
+
+    if (direction) {
+        const guess = direction === 'left' ? 'ai' : 'real';
+        console.log(`Swipe ${direction} triggered guess: ${guess}`);
+        handleMobileGuess(guess);
+        setSwipeDirectionForExit(direction); // Set direction for exit animation
+    } else {
+        animate(x, 0, { type: "spring", stiffness: 350, damping: 35 });
+        setSwipeDirectionForExit(null);
+    }
+  };
+
+  // --- Loading and Error States ---
+  const isLoading = isMobile ? mobileLoading : pairLoading;
+  const error = isMobile ? mobileError : pairError;
 
   if (error) {
-    return (
-      <div className="flex justify-center items-center h-64 text-red-600 text-center">
-        Error: {error}
-      </div>
-    );
+    return <div className="flex justify-center items-center h-64 text-red-600 text-center">Error: {error}</div>;
   }
 
-  // Show loading only on very first load for mobile OR if list becomes empty while not showing feedback
-  const showMobileLoader = isMobile && (loading || mobileImageList.length === 0) && isInitialMobileLoad;
-  // const showMobileLoader = isMobile && loading && mobileImageList.length === 0; // Simpler loader condition?
-
-
-  if (showMobileLoader) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
@@ -452,12 +355,10 @@ const GameBoard: React.FC = () => {
     );
   }
 
-  const shuffledImages = getShuffledImages();
+  // --- Render Logic ---
+  const shuffledDesktopImages = getShuffledImages(); // Desktop only
 
-  // Mobile image to display - use the memoized helper
-  const currentMobileImage = getCurrentMobileImage();
-
-  // Updated Animation variants with custom exit
+  // Animation variants (Keep)
   const imageVariants = {
       hidden: { opacity: 0, scale: 0.9, x: 0, rotate: 0 },
       visible: { opacity: 1, scale: 1, x: 0, rotate: 0 },
@@ -478,52 +379,35 @@ const GameBoard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto relative p-4 flex flex-col overflow-hidden h-full"> {/* Changed max-w-4xl to max-w-3xl */}
-      {/* Update Confetti props */}
-      {showConfetti && (
-        <Confetti
-          width={width}
-          height={height}
-          recycle={false}
-          numberOfPieces={400} // Increased pieces
-          style={{ zIndex: 9999 }} // Ensure it's on top
-          gravity={0.15} // Make confetti fall slower
-        />
-      )}
+    <div className="max-w-3xl mx-auto relative p-4 flex flex-col overflow-hidden h-full">
+      {/* ... Confetti ... */} 
+      {showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={400} style={{ zIndex: 9999 }} gravity={0.15} />}
 
-      {/* Header Text Area - Adjusted Padding */}
-      <div className="mb-2 pt-2"> {/* Reduced pt-4 to pt-2 */}
+      {/* ... Header Text ... */}
+      <div className="mb-2 pt-2">
         <h2 className="text-2xl font-medium text-center text-gray-900 mb-1">
           {isMobile ? 'Is this photo Real or AI?' : 'Which is the real photo?'}
         </h2>
-        {/* Updated Mobile Instructions - Adjusted Padding */}
-        <p className="text-center text-gray-500 mb-4"> {/* Increased mb-3 to mb-4 */}
-          {isMobile
-            ? 'Swipe or click buttons below'
-            : 'Click on the image you think is real.'}
+        <p className="text-center text-gray-500 mb-4">
+          {isMobile ? 'Swipe or click buttons below' : 'Click on the image you think is real.'}
         </p>
       </div>
 
-      {/* Main Content Flex Container */}
-      {/* Ensure this container fills remaining space */}
       <div className="flex-grow flex flex-col items-center mb-0 relative min-h-0">
         {isMobile ? (
-          // ------------- MOBILE VIEW -------------
-          // Ensure this inner container also allows flex-grow for image area
+          // ------------- MOBILE VIEW (Refactored) -------------
           <div className="flex flex-col items-center flex-grow relative w-full min-h-0">
-            {/* Card Stack Area - Removed flex-grow/min-h-0 */}
-            <div className="relative w-full max-w-sm aspect-square flex justify-center items-center mb-1"> {/* Removed flex-grow min-h-0 */}
+            <div className="relative w-full max-w-sm aspect-square flex justify-center items-center mb-1">
               <AnimatePresence mode="wait" custom={swipeDirectionForExit}>
-                {currentMobileImage ? ( // Check if image exists before rendering card
+                {currentMobileImage ? (
                   <motion.div
-                    key={currentMobileImage.id}
-                    className="absolute w-full h-full z-10 cursor-grab overflow-hidden rounded-lg" // Removed shadow-md
+                    key={currentMobileImage.id} // Keyed by image ID for animation
+                    className="absolute w-full h-full z-10 cursor-grab overflow-hidden rounded-lg"
                     drag="x"
                     dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                    // Apply touchAction style here to prevent scroll conflict
                     style={{ x, rotate, opacity: imageOpacity, touchAction: 'pan-y' }}
                     onDragEnd={handleDragEnd}
-                    variants={imageVariants}
+                    variants={imageVariants} // Use existing variants
                     initial="hidden"
                     animate="visible"
                     exit="exit"
@@ -531,113 +415,64 @@ const GameBoard: React.FC = () => {
                   >
                     <ImageCard
                       image={currentMobileImage}
-                      index={0}
+                      // Props simplified for mobile card display
+                      index={0} 
                       selected={false}
                       showResult={false}
                       isCorrect={null}
-                      onSelect={() => {}}
-                      disabled={false}
+                      onSelect={() => {}} // No selection needed
+                      disabled={false} // Can always swipe/button press before feedback
                       isMobileView={true}
                     />
                   </motion.div>
                  ) : (
-                   // Optional: Placeholder or loader if no image but not initial load
-                   !loading && <div className="text-gray-500">Loading image...</div>
+                   <div className="text-gray-500">No image available.</div>
                  )}
               </AnimatePresence>
 
-              {/* Interactive Drag Overlays - MOVED OUTSIDE & ABOVE draggable div */}
-              <motion.div 
-                className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 pointer-events-none rounded-lg"
-                style={{ opacity: aiOpacity }} // AI overlay uses aiOpacity (triggered by left drag)
-              >
+              {/* ... Drag Overlays ... */} 
+              <motion.div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 pointer-events-none rounded-lg" style={{ opacity: aiOpacity }}>
                   <span className="text-gray-800 text-5xl font-bold flex flex-col items-center">🤖<span className="text-2xl mt-1">AI?</span></span>
               </motion.div>
-              <motion.div 
-                className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 pointer-events-none rounded-lg"
-                style={{ opacity: realOpacity }} // Real overlay uses realOpacity (triggered by right drag)
-              >
+              <motion.div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 pointer-events-none rounded-lg" style={{ opacity: realOpacity }}>
                 <span className="text-gray-800 text-5xl font-bold flex flex-col items-center">📷<span className="text-2xl mt-1">Real?</span></span>
               </motion.div>
 
-              {/* NEW: AnimatePresence for Inline Feedback Emoji (already correctly positioned) */}
+              {/* ... Inline Feedback Emoji ... */} 
               <AnimatePresence>
-                {state.showFeedback && currentMobileImage && ( // Only show feedback if there's an image
-                    <motion.div
-                        key="feedback-emoji-inline" // Unique key
-                        className="absolute inset-0 z-30 flex items-center justify-center bg-white/60 rounded-lg pointer-events-none" // Overlay styling
-                        variants={feedbackInlineVariants} // Use new variants
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                    >
-                        <span className="text-7xl">
-                            {state.isCorrect ? '✅' : '❌'}
-                        </span>
-                    </motion.div>
+                {state.showFeedback && currentMobileImage && (
+                  <motion.div key="feedback-emoji-inline" className="absolute inset-0 z-30 flex items-center justify-center bg-white/60 rounded-lg pointer-events-none" variants={feedbackInlineVariants} initial="hidden" animate="visible" exit="exit">
+                    <span className="text-7xl">{state.isCorrect ? '✅' : '❌'}</span>
+                  </motion.div>
                 )}
              </AnimatePresence>
             </div>
 
-             {/* Loader - Show only during initial load (handled above) */}
-             {/* {(loading && !currentMobileImage && !state.showFeedback && isInitialMobileLoad) && (
-                <div className="absolute inset-0 flex justify-center items-center z-40 bg-white/50">
-                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
-                </div>
-             )} */}
-
-            {/* Mobile Buttons Container - Highlight Correct on Feedback */}
-            {/* Ensure buttons don't take unnecessary space initially */}
-            <div className="flex-shrink-0 w-full"> {/* Prevent buttons from growing */}
-              {currentMobileImage && ( // Only show buttons if there's an image
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }} // Just fade in initially
-                  transition={{ duration: 0.2, delay: 0.5 }} // Keep initial delay
-                  // Reduced margins
-                  className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-1" // Added mx-auto
-                >
-                  {/* Left Button = REAL - Conditionally Fade */}
-                  <motion.button
-                    onClick={() => handleMobileGuess('real')}
-                    disabled={state.showFeedback}
-                    animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 0.3 : 1) : 1 }} // Fade if incorrect (AI was correct)
-                    transition={{ duration: 0.2 }}
-                    // Removed transition duration-150
-                    className="flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 hover:bg-gray-50"
-                  >
+            {/* ... Mobile Buttons ... */} 
+            <div className="flex-shrink-0 w-full">
+              {currentMobileImage && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.5 }} className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-1">
+                  <motion.button onClick={() => handleMobileGuess('real')} disabled={state.showFeedback} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 0.3 : 1) : 1 }} transition={{ duration: 0.2 }} className="flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 hover:bg-gray-50">
                     <span className="text-xl">📷</span> Real
                   </motion.button>
-                  {/* Right Button = AI - Conditionally Fade */}
-                  <motion.button
-                    onClick={() => handleMobileGuess('ai')}
-                    disabled={state.showFeedback}
-                    animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 1 : 0.3) : 1 }} // Fade if incorrect (Real was correct)
-                    transition={{ duration: 0.2 }}
-                    // Removed transition duration-150
-                    className="flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 hover:bg-gray-50"
-                  >
+                  <motion.button onClick={() => handleMobileGuess('ai')} disabled={state.showFeedback} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 1 : 0.3) : 1 }} transition={{ duration: 0.2 }} className="flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 hover:bg-gray-50">
                     <span className="text-xl">🤖</span> AI
                   </motion.button>
                 </motion.div>
               )}
             </div>
 
-            {/* Score Display (Positioned after buttons) - Reduced Margins */}
-            {/* Ensure score display doesn't take unnecessary space */}
-             <div className="w-full flex justify-center mt-1 mb-0 flex-shrink-0"> {/* Prevent score from growing */}
-                <ScoreDisplay
-                  score={state.score}
-                  totalAttempts={state.totalAttempts}
-                  onReset={handleResetGame} // Use the new reset handler
-                />
+            {/* ... Score Display ... */} 
+             <div className="w-full flex justify-center mt-1 mb-0 flex-shrink-0">
+                <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
               </div>
           </div>
+
         ) : (
-          // ------------- DESKTOP VIEW -------------
+          // ------------- DESKTOP VIEW (Largely Unchanged) -------------
           <div className="relative w-full mt-6">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2"> {/* Reduce bottom margin */}
-               {shuffledImages.map((image, index) => (
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
+               {shuffledDesktopImages.map((image, index) => (
                  <ImageCard
                     key={image.id}
                     image={image}
@@ -645,32 +480,24 @@ const GameBoard: React.FC = () => {
                     selected={state.selectedImageId === image.id}
                     showResult={state.showFeedback && state.selectedImageId === image.id}
                     isCorrect={state.isCorrect ?? false}
-                    onSelect={() => handleImageSelect(image.id)} // Use handleImageSelect
+                    onSelect={() => handleImageSelect(image.id)}
                     disabled={state.showFeedback || !!state.selectedImageId}
                     isMobileView={false}
                  />
                ))}
              </div>
-
-             {/* Score Display (Positioned after grid) */}
-             <div className="w-full flex justify-center mt-2 mb-1"> {/* Add top margin, small bottom margin */}
-                <ScoreDisplay
-                  score={state.score}
-                  totalAttempts={state.totalAttempts}
-                  onReset={handleResetGame} // Use new reset handler
-                />
+             {/* ... Desktop Score Display ... */}
+             <div className="w-full flex justify-center mt-2 mb-1">
+                <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
               </div>
           </div>
         )}
       </div>
 
-      {/* Feedback Button Area - HIDE on Mobile */}
-      {/* Ensure this doesn't take space on mobile */}
+      {/* ... Desktop Feedback Button ... */}
       <div className={`w-full flex justify-center ${isMobile ? 'flex-shrink-0' : ''}`}>
           { !isMobile && state.showFeedback && (
-            <div className="mt-0">
-              <Feedback isCorrect={state.isCorrect} onNext={handleNextPair} />
-            </div>
+            <div className="mt-0"><Feedback isCorrect={state.isCorrect} onNext={() => { nextPair(); generateRandomPair(); }} /></div> // Simplified desktop next action
           )}
       </div>
     </div>

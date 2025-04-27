@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ImagePair, Image, Category } from '../types';
 import { getCategoryImages, availableCategories } from '../data/images';
 
@@ -13,10 +13,12 @@ export const useImagePair = () => {
   // Use a single ref for combined history
   const recentlyUsedIds = useRef<string[]>([]);
 
-  const generateRandomPair = () => {
+  // --- Wrap generateRandomPair in useCallback ---
+  const generateRandomPair = useCallback(() => {
     setLoading(true);
     setError(null);
     
+    // Check for available categories (dependency)
     if (availableCategories.length === 0) {
       console.error('No categories with images found in public/images/');
       setError('No image categories available. Add images to public/images/');
@@ -30,8 +32,8 @@ export const useImagePair = () => {
     let chosenCategory: Category;
     const peopleWeight = 3; // How many extra times to weigh 'people'
     
+    // Depends on availableCategories
     if (availableCategories.includes('people') && availableCategories.length > 1) {
-      // Create a weighted list
       const weightedList = availableCategories.reduce((acc, category) => {
         const weight = (category === 'people') ? peopleWeight : 1;
         for (let i = 0; i < weight; i++) {
@@ -39,15 +41,14 @@ export const useImagePair = () => {
         }
         return acc;
       }, [] as Category[]);
-      // Pick randomly from the weighted list
       chosenCategory = weightedList[Math.floor(Math.random() * weightedList.length)];
     } else {
-      // If people isn't available, or it's the only category, pick uniformly
       chosenCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
     }
     
-    console.log('[Category Choice] Chosen:', chosenCategory); // Log chosen category
+    console.log('[Category Choice] Chosen:', chosenCategory);
 
+    // Depends on getCategoryImages (stable import) and chosenCategory
     const { real, ai } = getCategoryImages(chosenCategory);
     
     if (real.length === 0 || ai.length === 0) {
@@ -65,23 +66,22 @@ export const useImagePair = () => {
       randomRealImage = real[Math.floor(Math.random() * real.length)];
       attempts++;
     } while (
-      recentlyUsedIds.current.includes(randomRealImage.id) && // Check combined history
+      recentlyUsedIds.current.includes(randomRealImage.id) && 
       attempts < maxAttempts 
     );
 
-    // --- Select random AI image, avoiding recent ones (including the chosen real one) --- 
+    // --- Select random AI image, avoiding recent ones --- 
     let randomAiImage: Image;
-    attempts = 0; // Reset attempts
+    attempts = 0; 
     do {
       randomAiImage = ai[Math.floor(Math.random() * ai.length)];
       attempts++;
     } while (
-      recentlyUsedIds.current.includes(randomAiImage.id) || // Check combined history
-      (randomAiImage.id === randomRealImage.id && ai.length > 1) && // Avoid picking same as real image if possible
+      recentlyUsedIds.current.includes(randomAiImage.id) || 
+      (randomAiImage.id === randomRealImage.id && ai.length > 1) && 
       attempts < maxAttempts
     );
     
-    // Create the image pair
     const pair: ImagePair = {
       realImage: randomRealImage,
       aiImage: randomAiImage,
@@ -94,20 +94,24 @@ export const useImagePair = () => {
     // Update combined history ref
     recentlyUsedIds.current = 
         [pair.realImage.id, pair.aiImage.id, ...recentlyUsedIds.current]
-        .slice(0, RECENT_HISTORY_LENGTH); // Add both new IDs
+        .slice(0, RECENT_HISTORY_LENGTH);
 
     console.log('[History] Combined:', recentlyUsedIds.current);
 
     setLoading(false);
-  };
+  // Dependencies: availableCategories is stable after module load, getCategoryImages is stable.
+  // State setters are stable. useRef is stable. Logic depends only on these.
+  }, []); 
 
   useEffect(() => {
+    // generateRandomPair is now stable
     generateRandomPair();
-  }, []);
+  }, [generateRandomPair]); // Dependency array includes the stable callback
 
-  const getShuffledImages = (): Image[] => {
+  // --- Wrap getShuffledImages in useCallback ---
+  const getShuffledImages = useCallback((): Image[] => {
     return shuffledImages;
-  };
+  }, [shuffledImages]); // Depends on shuffledImages state
 
   return {
     currentPair,
