@@ -237,7 +237,7 @@ const GameBoard: React.FC = () => {
           nextPair(); 
           generateRandomPair();
         }
-      }, 1500);
+      }, 750);
     }
 
     return clearExistingTimer;
@@ -383,21 +383,32 @@ const GameBoard: React.FC = () => {
       {/* ... Confetti ... */} 
       {showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={400} style={{ zIndex: 9999 }} gravity={0.15} />}
 
-      {/* ... Header Text ... */}
-      <div className="mb-2 pt-2">
-        <h2 className="text-2xl font-medium text-center text-gray-900 mb-1">
-          {isMobile ? 'Is this photo Real or AI?' : 'Which is the real photo?'}
-        </h2>
-        <p className="text-center text-gray-500 mb-4">
-          {isMobile ? 'Swipe or click buttons below' : 'Click on the image you think is real.'}
-        </p>
+      {/* --- Header Section (Refactored) --- */}
+      <div className="mb-4 pt-2 flex flex-col items-center"> 
+        {isMobile ? (
+          // --- Mobile Header: Just the linked Logo ---
+          <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-4">
+            <img src="/realorai.svg" alt="Real or AI Logo" className="h-6 w-auto" /> {/* Reduced height */} 
+          </a>
+        ) : (
+          // --- Desktop Header: Logo + Instruction Text ---
+          <>
+            <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-2">
+              <img src="/realorai.svg" alt="Real or AI Logo" className="h-8 w-auto" /> {/* Reduced height */} 
+            </a>
+            <p className="text-center text-gray-500 mt-1">
+              Click on the image you think is real.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="flex-grow flex flex-col items-center mb-0 relative min-h-0">
         {isMobile ? (
           // ------------- MOBILE VIEW (Refactored) -------------
           <div className="flex flex-col items-center flex-grow relative w-full min-h-0">
-            <div className="relative w-full max-w-sm aspect-square flex justify-center items-center mb-1">
+            {/* --- Updated Mobile Image Container --- */}
+            <div className="relative w-[95%] mx-auto aspect-square flex justify-center items-center mb-1"> {/* Use 95% width, remove max-w-sm, add mx-auto */} 
               <AnimatePresence mode="wait" custom={swipeDirectionForExit}>
                 {currentMobileImage ? (
                   <motion.div
@@ -452,10 +463,12 @@ const GameBoard: React.FC = () => {
             <div className="flex-shrink-0 w-full">
               {currentMobileImage && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.5 }} className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-1">
-                  <motion.button onClick={() => handleMobileGuess('real')} disabled={state.showFeedback} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 0.3 : 1) : 1 }} transition={{ duration: 0.2 }} className="flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 hover:bg-gray-50">
+                  <motion.button onClick={() => handleMobileGuess('real')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 0.3 : 1) : 1 }} transition={{ duration: 0.2 }} 
+                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">📷</span> Real
                   </motion.button>
-                  <motion.button onClick={() => handleMobileGuess('ai')} disabled={state.showFeedback} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 1 : 0.3) : 1 }} transition={{ duration: 0.2 }} className="flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 hover:bg-gray-50">
+                  <motion.button onClick={() => handleMobileGuess('ai')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 1 : 0.3) : 1 }} transition={{ duration: 0.2 }} 
+                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">🤖</span> AI
                   </motion.button>
                 </motion.div>
@@ -470,8 +483,8 @@ const GameBoard: React.FC = () => {
 
         ) : (
           // ------------- DESKTOP VIEW (Largely Unchanged) -------------
-          <div className="relative w-full mt-6">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
+          <div className="relative w-full mt-10">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                {shuffledDesktopImages.map((image, index) => (
                  <ImageCard
                     key={image.id}
@@ -487,7 +500,7 @@ const GameBoard: React.FC = () => {
                ))}
              </div>
              {/* ... Desktop Score Display ... */}
-             <div className="w-full flex justify-center mt-2 mb-1">
+             <div className="w-full flex justify-center mt-4 mb-1">
                 <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
               </div>
           </div>
@@ -497,7 +510,7 @@ const GameBoard: React.FC = () => {
       {/* ... Desktop Feedback Button ... */}
       <div className={`w-full flex justify-center ${isMobile ? 'flex-shrink-0' : ''}`}>
           { !isMobile && state.showFeedback && (
-            <div className="mt-0"><Feedback isCorrect={state.isCorrect} onNext={() => { nextPair(); generateRandomPair(); }} /></div> // Simplified desktop next action
+            <div className="mt-4"><Feedback isCorrect={state.isCorrect} onNext={() => { nextPair(); generateRandomPair(); }} /></div>
           )}
       </div>
     </div>

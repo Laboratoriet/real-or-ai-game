@@ -1,5 +1,5 @@
 import React from 'react';
-import Header from './components/Header';
+// import Header from './components/Header';
 import GameBoard from './components/GameBoard';
 import RealOrAiArticle from './components/RealOrAiArticle';
 import Footer from './components/Footer';
@@ -11,7 +11,7 @@ function App() {
 
   return (
     <div className="h-dvh flex flex-col bg-white overflow-hidden">
-      <Header />
+      {/* <Header /> */}
       <main className="flex-grow container mx-auto px-4 pt-2 md:pt-4 min-h-0 overflow-y-auto">
         {isRealOrAiPage ? <RealOrAiArticle /> : <GameBoard />}
       </main>
