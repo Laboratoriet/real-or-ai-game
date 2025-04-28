@@ -408,7 +408,7 @@ const GameBoard: React.FC = () => {
           // ------------- MOBILE VIEW (Refactored) -------------
           <div className="flex flex-col items-center flex-grow relative w-full min-h-0">
             {/* --- Updated Mobile Image Container --- */}
-            <div className="relative w-[95%] mx-auto aspect-square flex justify-center items-center mb-1"> {/* Use 95% width, remove max-w-sm, add mx-auto */} 
+            <div className="relative w-[98%] mx-auto aspect-square flex justify-center items-center mb-1"> {/* Use 98% width */} 
               <AnimatePresence mode="wait" custom={swipeDirectionForExit}>
                 {currentMobileImage ? (
                   <motion.div
@@ -464,11 +464,11 @@ const GameBoard: React.FC = () => {
               {currentMobileImage && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.5 }} className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-1">
                   <motion.button onClick={() => handleMobileGuess('real')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 0.3 : 1) : 1 }} transition={{ duration: 0.2 }} 
-                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:bg-gray-50' : ''}`}>
+                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">📷</span> Real
                   </motion.button>
                   <motion.button onClick={() => handleMobileGuess('ai')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 1 : 0.3) : 1 }} transition={{ duration: 0.2 }} 
-                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 rounded-full border-2 border-gray-200 disabled:opacity-50 text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:bg-gray-50' : ''}`}>
+                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">🤖</span> AI
                   </motion.button>
                 </motion.div>
