@@ -24,8 +24,8 @@ const ImageCard: React.FC<ImageCardProps> = ({
 }) => {
   return (
     <div
-      className={`relative overflow-hidden rounded-lg transition-all duration-300 ${
-        selected ? 'ring-2 ring-gray-900' : 'hover:opacity-90'
+      className={`relative overflow-hidden rounded-lg transition-all duration-300 ${ 
+        'hover:opacity-90'
       } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       onClick={() => !disabled && onSelect(image.id)}
     >
@@ -43,13 +43,13 @@ const ImageCard: React.FC<ImageCardProps> = ({
       />
       
       {showResult && selected && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-4xl">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/60 text-4xl">
           {isCorrect ? '✅' : '❌'}
         </div>
       )}
       
       {showResult && !selected && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white opacity-80 p-2">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 text-gray-800 opacity-80 p-2">
           {image.isAI ? (
             <>
               <span className="text-3xl">🤖</span>

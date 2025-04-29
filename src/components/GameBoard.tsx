@@ -464,11 +464,11 @@ const GameBoard: React.FC = () => {
               {currentMobileImage && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.5 }} className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-1">
                   <motion.button onClick={() => handleMobileGuess('real')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 0.3 : 1) : 1 }} transition={{ duration: 0.2 }} 
-                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:bg-gray-50' : ''}`}>
+                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">📷</span> Real
                   </motion.button>
                   <motion.button onClick={() => handleMobileGuess('ai')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 1 : 0.3) : 1 }} transition={{ duration: 0.2 }} 
-                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:bg-gray-50' : ''}`}>
+                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">🤖</span> AI
                   </motion.button>
                 </motion.div>
@@ -483,8 +483,8 @@ const GameBoard: React.FC = () => {
 
         ) : (
           // ------------- DESKTOP VIEW (Largely Unchanged) -------------
-          <div className="relative w-full mt-10">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+          <div className="relative w-full mt-6"> {/* Reduced top margin back */} 
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2"> {/* Reduced bottom margin back */} 
                {shuffledDesktopImages.map((image, index) => (
                  <ImageCard
                     key={image.id}
@@ -500,7 +500,7 @@ const GameBoard: React.FC = () => {
                ))}
              </div>
              {/* ... Desktop Score Display ... */}
-             <div className="w-full flex justify-center mt-4 mb-1">
+             <div className="w-full flex justify-center mt-2 mb-1"> {/* Reduced top margin back */} 
                 <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
               </div>
           </div>
@@ -510,7 +510,7 @@ const GameBoard: React.FC = () => {
       {/* ... Desktop Feedback Button ... */}
       <div className={`w-full flex justify-center ${isMobile ? 'flex-shrink-0' : ''}`}>
           { !isMobile && state.showFeedback && (
-            <div className="mt-4"><Feedback isCorrect={state.isCorrect} onNext={() => { nextPair(); generateRandomPair(); }} /></div>
+            <div className="mt-2"><Feedback isCorrect={state.isCorrect} onNext={() => { nextPair(); generateRandomPair(); }} /></div>
           )}
       </div>
     </div>
