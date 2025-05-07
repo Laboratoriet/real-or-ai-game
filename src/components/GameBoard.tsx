@@ -396,8 +396,8 @@ const GameBoard: React.FC = () => {
             <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-2">
               <img src="/realorai.svg" alt="Real or AI Logo" className="h-8 w-auto" /> {/* Reduced height */} 
             </a>
-            <p className="text-center text-gray-500 mt-1">
-              Click on the image you think is real.
+            <p className="text-gray-600 text-center mb-1 text-xs sm:text-sm">
+              Click on the image you think is <strong>real</strong>.
             </p>
           </>
         )}
