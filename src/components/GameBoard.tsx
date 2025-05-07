@@ -379,12 +379,12 @@ const GameBoard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto relative p-4 flex flex-col overflow-hidden h-full">
+    <div className="max-w-5xl mx-auto relative p-4 flex flex-col overflow-hidden h-full">
       {/* ... Confetti ... */} 
       {showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={400} style={{ zIndex: 9999 }} gravity={0.15} />}
 
       {/* --- Header Section (Refactored) --- */}
-      <div className="mb-4 pt-2 flex flex-col items-center"> 
+      <div className="mb-6 pt-2 flex flex-col items-center"> 
         {isMobile ? (
           // --- Mobile Header: Just the linked Logo ---
           <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-4">
@@ -396,7 +396,7 @@ const GameBoard: React.FC = () => {
             <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-2">
               <img src="/realorai.svg" alt="Real or AI Logo" className="h-8 w-auto" /> {/* Reduced height */} 
             </a>
-            <p className="text-gray-600 text-center mb-1 text-xs sm:text-sm">
+            <p className="text-gray-600 text-center sm:text-base lg:text-lg mb-2">
               Click on the image you think is <strong>real</strong>.
             </p>
           </>
@@ -483,7 +483,7 @@ const GameBoard: React.FC = () => {
 
         ) : (
           // ------------- DESKTOP VIEW (Largely Unchanged) -------------
-          <div className="relative w-full mt-6"> {/* Reduced top margin back */} 
+          <div className="relative w-full mt-8"> {/* Reduced top margin back */} 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2"> {/* Reduced bottom margin back */} 
                {shuffledDesktopImages.map((image, index) => (
                  <ImageCard
