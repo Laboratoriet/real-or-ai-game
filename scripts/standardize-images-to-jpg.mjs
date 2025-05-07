@@ -19,8 +19,12 @@ async function findProcessableImageFiles(dir) {
       }
       files = files.concat(await findProcessableImageFiles(fullPath));
     } else {
-      const ext = path.extname(item.name).toLowerCase();
-      if (NON_JPG_EXTENSIONS.includes(ext)) {
+      const originalExt = path.extname(item.name); // Get original extension with its case
+      const lowerExt = originalExt.toLowerCase();
+
+      // Process if it's a non-JPG extension that needs conversion,
+      // OR if it's an original .JPG (uppercase) that needs to be standardized to .jpg (lowercase)
+      if (NON_JPG_EXTENSIONS.includes(lowerExt) || originalExt === '.JPG') {
         files.push(fullPath);
       }
     }
@@ -29,10 +33,17 @@ async function findProcessableImageFiles(dir) {
 }
 
 async function standardizeImage(filePath) {
+  const originalExt = path.extname(filePath); // Get original extension with its case
   const dirname = path.dirname(filePath);
-  const extname = path.extname(filePath);
-  const basename = path.basename(filePath, extname);
-  const targetPath = path.join(dirname, `${basename}${TARGET_EXTENSION}`);
+  // Ensure basename is derived correctly, and then always append lowercase .jpg
+  const basename = path.basename(filePath, originalExt); 
+  const targetPath = path.join(dirname, `${basename}${TARGET_EXTENSION}`); // TARGET_EXTENSION is .jpg (lowercase)
+
+  // If the filePath is already the targetPath (e.g. it was already lowercase .jpg), nothing to do.
+  if (filePath === targetPath) {
+    // console.log(`File ${filePath} is already in target format and case. Skipping.`);
+    return;
+  }
 
   // Safety check: if a .jpg version already exists, and it's not the same file path (e.g. .jpeg to .jpg)
   // This is a basic check. More robust would be to compare content or modification times if needed.
@@ -49,18 +60,28 @@ async function standardizeImage(filePath) {
       // This is fine.
   }
 
-
   console.log(`Standardizing: ${filePath} -> ${targetPath}`);
   try {
     await sharp(filePath)
+      .rotate() // Add EXIF-based auto-rotation
       .jpeg({ quality: 90, mozjpeg: true }) // Adjust quality as needed
       .toFile(targetPath);
     console.log(`Successfully created: ${targetPath}`);
 
     // If conversion was successful and target is different from source, delete original
-    if (filePath !== targetPath) {
-      await fs.unlink(filePath);
-      console.log(`Successfully deleted original: ${filePath}`);
+    // This check is important: if original was 'image.JPG' and target is 'image.jpg',
+    // they are different file paths on case-sensitive systems, so original should be deleted.
+    // If original was 'image.png' and target is 'image.jpg', also delete.
+    if (filePath.toLowerCase() !== targetPath.toLowerCase()) { // Compare case-insensitively for path difference before delete
+        try {
+            await fs.access(filePath); // Check if original still exists before unlinking
+            await fs.unlink(filePath);
+            console.log(`Successfully deleted original: ${filePath}`);
+        } catch (e) {
+            // Original might have been same as target in a case-insensitive OS and already replaced
+            // or was already deleted in a previous step. This is not an error.
+            // console.log(`Original ${filePath} not found for deletion, possibly already replaced or deleted.`);
+        }
     }
   } catch (err) {
     console.error(`Error standardizing ${filePath}:`, err);

@@ -33,8 +33,8 @@ async function findImageFiles(dir) {
 
 async function generateLqip(filePath) {
   const dirname = path.dirname(filePath);
-  // const extname = path.extname(filePath); // Original is now always .jpg
-  const basename = path.basename(filePath, ORIGINAL_ALLOWED_EXTENSION); // Get basename from .jpg
+  // Get basename, stripping .jpg or .JPG case-insensitively
+  const basename = path.basename(filePath).replace(/\.jpg$/i, ''); 
 
   const lqipTargetDirectory = path.join(dirname, LQIP_SUBFOLDER_NAME);
   const lqipPath = path.join(lqipTargetDirectory, `${basename}${TARGET_LQIP_EXTENSION}`);
