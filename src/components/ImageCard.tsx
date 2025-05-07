@@ -28,19 +28,23 @@ const ImageCard: React.FC<ImageCardProps> = ({
     // Reset loaded state when image src changes
     setIsFullImageLoaded(false);
 
-    if (image.lqipSrc) {
+    if (image.lqipSrc && image.src) {
       const img = new window.Image();
       img.src = image.src;
       img.onload = () => {
         setIsFullImageLoaded(true);
       };
+      img.onerror = () => {
+        console.error(`Failed to load image: ${image.src}`);
+        setIsFullImageLoaded(true);
+      };
     } else {
-      // If no LQIP, consider the image loaded immediately (or rely on native lazy loading)
+      // If no LQIP or no main src, consider the image loaded (or rely on native lazy loading for main src)
       setIsFullImageLoaded(true);
     }
   }, [image.src, image.lqipSrc]);
 
-  const displaySrc = !image.lqipSrc || isFullImageLoaded ? image.src : image.lqipSrc;
+  const displaySrc = image.lqipSrc && !isFullImageLoaded ? image.lqipSrc : image.src;
   const blurClass = image.lqipSrc && !isFullImageLoaded ? 'blur-md' : '';
 
   return (

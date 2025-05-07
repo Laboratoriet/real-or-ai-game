@@ -393,7 +393,7 @@ const GameBoard: React.FC = () => {
         ) : (
           // --- Desktop Header: Logo + Instruction Text ---
           <>
-            <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-2">
+            <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-3">
               <img src="/realorai.svg" alt="Real or AI Logo" className="h-8 w-auto" /> {/* Reduced height */} 
             </a>
             <p className="text-gray-600 text-center sm:text-base lg:text-lg mb-2">
@@ -484,7 +484,7 @@ const GameBoard: React.FC = () => {
         ) : (
           // ------------- DESKTOP VIEW (Largely Unchanged) -------------
           <div className="relative w-full mt-8"> {/* Reduced top margin back */} 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2"> {/* Reduced bottom margin back */} 
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4"> {/* Reduced bottom margin back */} 
                {shuffledDesktopImages.map((image, index) => (
                  <ImageCard
                     key={image.id}
@@ -500,7 +500,7 @@ const GameBoard: React.FC = () => {
                ))}
              </div>
              {/* ... Desktop Score Display ... */}
-             <div className="w-full flex justify-center mt-2 mb-1"> {/* Reduced top margin back */} 
+             <div className="w-full flex justify-center mt-4 mb-1"> {/* Reduced top margin back */} 
                 <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
               </div>
           </div>
