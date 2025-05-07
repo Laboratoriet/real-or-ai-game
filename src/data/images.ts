@@ -1,8 +1,8 @@
 import { Category, Image } from '../types';
 
 // Use Vite's import.meta.glob to find all image files at build time
-// Include common image extensions. Add others if needed.
-const allImageFiles = import.meta.glob('/public/images/*/*/*.{jpg,jpeg,png,webp,gif}');
+// Now only looking for .jpg files in the main category/type directories.
+const allImageFiles = import.meta.glob('/public/images/*/*/*.jpg');
 
 // Object to cache generated image lists by category
 const categoryImageCache: Partial<Record<Category, { real: Image[], ai: Image[] }>> = {};
@@ -11,9 +11,20 @@ const categoryImageCache: Partial<Record<Category, { real: Image[], ai: Image[] 
 const availableCategoriesSet = new Set<Category>();
 
 for (const path in allImageFiles) {
-  // Example path: /public/images/people/real/1.jpg
+  // Example path could be: /public/images/people/real/1.jpg
+  // OR it could incorrectly pick up /public/images/people/real/lqip/1.jpg if not filtered
+
   const parts = path.split('/');
-  if (parts.length >= 6) {
+  // parts for /public/images/people/real/1.jpg => ['', 'public', 'images', 'people', 'real', '1.jpg'] (length 6)
+  // parts for /public/images/people/real/lqip/1.jpg => ['', 'public', 'images', 'people', 'real', 'lqip', '1.jpg'] (length 7)
+
+  // Filter out paths that are within an 'lqip' subfolder
+  if (parts.length > 6 && parts[parts.length - 2].toLowerCase() === 'lqip') {
+    // This is an LQIP file itself, skip it as a main image
+    continue;
+  }
+
+  if (parts.length >= 6) { // Should be true for main images like /public/images/category/type/filename.jpg
     const category = parts[3] as Category;
     const type = parts[4]; // 'real' or 'ai'
 
@@ -30,13 +41,12 @@ for (const path in allImageFiles) {
     let lqipSrc: string | undefined = undefined;
 
     if (filenameWithExtension) {
-        const lastDotIndex = filenameWithExtension.lastIndexOf('.');
-        const filenameWithoutExtension = lastDotIndex > -1 ? filenameWithExtension.substring(0, lastDotIndex) : filenameWithExtension;
+        // Original filename is now always .jpg
+        const filenameWithoutExtension = filenameWithExtension.substring(0, filenameWithExtension.lastIndexOf('.'));
         
-        // Construct LQIP source path
-        // e.g. /images/category/type/filename.lqip.jpg
-        const basePath = path.substring(0, path.lastIndexOf('/') + 1).replace('/public', '');
-        lqipSrc = `${basePath}${filenameWithoutExtension}.lqip.jpg`;
+        // Construct LQIP source path, e.g., /images/category/type/lqip/filename.jpg
+        const basePathForLqip = path.substring(0, path.lastIndexOf('/') + 1).replace('/public', '');
+        lqipSrc = `${basePathForLqip}lqip/${filenameWithoutExtension}.jpg`;
 
         const fileIndexMatch = filenameWithoutExtension.match(/^(\d+)$/); // Match if filename IS a number
         if (fileIndexMatch && fileIndexMatch[1]) {
