@@ -3,6 +3,7 @@ export type Category = 'people' | 'nature' | 'city' | 'interior';
 export interface Image {
   id: string;
   src: string;
+  lqipSrc?: string; // Low-Quality Image Placeholder
   category: Category;
   isAI: boolean;
 }

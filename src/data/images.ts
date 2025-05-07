@@ -25,16 +25,25 @@ for (const path in allImageFiles) {
     // Now we know categoryImageCache[category] is defined
     const cacheEntry = categoryImageCache[category]!;
 
-    const filename = path.split('/').pop(); // Get the filename like "1.jpg"
+    const filenameWithExtension = path.split('/').pop();
     let index: number | string | undefined = undefined;
+    let lqipSrc: string | undefined = undefined;
 
-    if (filename) {
-        const fileIndexMatch = filename.match(/^(\\d+)\\./); // Match digits at the start of the filename
+    if (filenameWithExtension) {
+        const lastDotIndex = filenameWithExtension.lastIndexOf('.');
+        const filenameWithoutExtension = lastDotIndex > -1 ? filenameWithExtension.substring(0, lastDotIndex) : filenameWithExtension;
+        
+        // Construct LQIP source path
+        // e.g. /images/category/type/filename.lqip.jpg
+        const basePath = path.substring(0, path.lastIndexOf('/') + 1).replace('/public', '');
+        lqipSrc = `${basePath}${filenameWithoutExtension}.lqip.jpg`;
+
+        const fileIndexMatch = filenameWithoutExtension.match(/^(\d+)$/); // Match if filename IS a number
         if (fileIndexMatch && fileIndexMatch[1]) {
              index = parseInt(fileIndexMatch[1], 10);
         } else {
             // Fallback if no numeric prefix is found, use the filename without extension
-            index = filename.substring(0, filename.lastIndexOf('.')) || filename;
+            index = filenameWithoutExtension;
         }
     } else {
         // Fallback if filename couldn't be extracted (shouldn't happen with glob pattern)
@@ -42,8 +51,9 @@ for (const path in allImageFiles) {
     }
 
     const image: Image = {
-      id: `${type}-${category}-${index}`, // Use the extracted index or fallback string
+      id: `${type}-${category}-${index}`,
       src: path.replace('/public', ''),
+      lqipSrc: lqipSrc,
       category: category,
       isAI: type === 'ai',
     };

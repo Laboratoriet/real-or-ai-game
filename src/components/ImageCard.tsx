@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Image } from '../types';
 
 interface ImageCardProps {
@@ -22,6 +22,27 @@ const ImageCard: React.FC<ImageCardProps> = ({
   disabled,
   isMobileView,
 }) => {
+  const [isFullImageLoaded, setIsFullImageLoaded] = useState(false);
+
+  useEffect(() => {
+    // Reset loaded state when image src changes
+    setIsFullImageLoaded(false);
+
+    if (image.lqipSrc) {
+      const img = new window.Image();
+      img.src = image.src;
+      img.onload = () => {
+        setIsFullImageLoaded(true);
+      };
+    } else {
+      // If no LQIP, consider the image loaded immediately (or rely on native lazy loading)
+      setIsFullImageLoaded(true);
+    }
+  }, [image.src, image.lqipSrc]);
+
+  const displaySrc = !image.lqipSrc || isFullImageLoaded ? image.src : image.lqipSrc;
+  const blurClass = image.lqipSrc && !isFullImageLoaded ? 'blur-md' : '';
+
   return (
     <div
       className={`relative overflow-hidden rounded-lg transition-all duration-300 ${ 
@@ -36,9 +57,9 @@ const ImageCard: React.FC<ImageCardProps> = ({
       )}
       
       <img
-        src={image.src}
+        src={displaySrc}
         alt={`${image.isAI ? 'AI-generated' : 'Real'} ${image.category} image`}
-        className="w-full aspect-square object-cover"
+        className={`w-full aspect-square object-cover transition-all duration-300 ${blurClass}`}
         loading="lazy"
       />
       
