@@ -71,6 +71,7 @@ const GameBoard: React.FC = () => {
   const [mobileError, setMobileError] = useState<string | null>(null);
   // State to block interactions during mobile advancement
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [buttonResetKey, setButtonResetKey] = useState(0); // Added for button reset
 
   // State for swipe/exit animation (used by both)
   const [swipeDirectionForExit, setSwipeDirectionForExit] = useState<'left' | 'right' | null>(null);
@@ -211,9 +212,10 @@ const GameBoard: React.FC = () => {
     x.set(0);
     
     // Reset feedback state using game state hook
-    nextPair(); 
+    nextPair();
 
     setIsAdvancing(false); // Unblock interactions END
+    setButtonResetKey(prevKey => prevKey + 1); // Increment key to reset buttons
 
   }, [masterMobileList, masterMobileIndex, uniqueImagesShownCount, nextPair, x]);
 
@@ -463,11 +465,11 @@ const GameBoard: React.FC = () => {
             <div className="flex-shrink-0 w-full">
               {currentMobileImage && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.5 }} className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-1">
-                  <motion.button onClick={() => handleMobileGuess('real')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 0.3 : 1) : 1 }} transition={{ duration: 0.2 }} 
+                  <motion.button key={`real-button-${buttonResetKey}`} onClick={() => handleMobileGuess('real')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 0.3 : 1) : 1 }} transition={{ duration: 0.2 }}
                     className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">📷</span> Real
                   </motion.button>
-                  <motion.button onClick={() => handleMobileGuess('ai')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 1 : 0.3) : 1 }} transition={{ duration: 0.2 }} 
+                  <motion.button key={`ai-button-${buttonResetKey}`} onClick={() => handleMobileGuess('ai')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 1 : 0.3) : 1 }} transition={{ duration: 0.2 }}
                     className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">🤖</span> AI
                   </motion.button>
