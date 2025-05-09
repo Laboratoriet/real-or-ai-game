@@ -161,6 +161,10 @@ const GameBoard: React.FC = () => {
     if (state.showFeedback || !currentMobileImage || !isMobile || isAdvancing) return;
     const isCorrect = (guess === 'real' && !currentMobileImage.isAI) || (guess === 'ai' && currentMobileImage.isAI);
     showFeedback(isCorrect);
+
+    // Attempt to blur buttons immediately after guess
+    realButtonRef.current?.blur();
+    aiButtonRef.current?.blur();
   };
 
   // --- Mobile Advancement Logic --- 
@@ -270,6 +274,31 @@ const GameBoard: React.FC = () => {
     }
     return clearConfettiTimer;
   }, [state.isCorrect, state.correctStreak, state.showFeedback]);
+
+  // Disable body scroll on mobile for better swipe experience
+  useEffect(() => {
+    const mainScrollContainer = document.getElementById('main-scroll-container');
+    let originalOverflowY = '';
+    if (mainScrollContainer) {
+      originalOverflowY = mainScrollContainer.style.overflowY;
+    }
+
+    if (isMobile) {
+      if (mainScrollContainer) {
+        mainScrollContainer.style.overflowY = 'hidden';
+      }
+    } else {
+      if (mainScrollContainer) {
+        mainScrollContainer.style.overflowY = originalOverflowY || 'auto'; // Restore or default to auto
+      }
+    }
+
+    return () => {
+      if (mainScrollContainer) {
+        mainScrollContainer.style.overflowY = originalOverflowY || 'auto'; // Restore on unmount
+      }
+    };
+  }, [isMobile]);
 
   // --- Adjusted Keyboard Handler ---
   useEffect(() => {
