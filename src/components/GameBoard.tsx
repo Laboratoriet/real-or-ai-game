@@ -332,7 +332,7 @@ const GameBoard: React.FC = () => {
     };
   }, [handleKeyDown]); // Dependency array is important
 
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number, y: number }, velocity: { x: number, y: number } }) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number, y: number }, velocity: { x: number, y: number } }) => {
     if (!isMobile || isAdvancing || state.showFeedback) return;
 
     const swipeThreshold = width / 4; // Swipe 1/4 of the screen to trigger a guess
