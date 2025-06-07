@@ -391,7 +391,7 @@ const GameBoard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto relative p-4 flex flex-col overflow-hidden h-full">
+    <div className={`max-w-5xl mx-auto relative p-4 flex flex-col ${isMobile ? 'overflow-hidden h-full' : ''}`}>
       {/* ... Confetti ... */} 
       {showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={400} style={{ zIndex: 9999 }} gravity={0.15} />}
 
