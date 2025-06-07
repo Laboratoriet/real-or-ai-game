@@ -11,14 +11,14 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, totalAttempts, onRes
   const percentage = totalAttempts > 0 ? Math.round((score / totalAttempts) * 100) : 0;
   
   return (
-    <div className="flex items-center justify-center gap-8 py-4">
+    <div className="flex items-center justify-center gap-6 py-2">
       <div className="text-center">
-        <div className="text-3xl font-medium text-gray-900">{score}</div>
+        <div className="text-2xl font-medium text-gray-900">{score}</div>
         <div className="text-sm text-gray-500">Correct</div>
       </div>
       
       <div className="text-center">
-        <div className="text-3xl font-medium text-gray-900">{percentage}%</div>
+        <div className="text-2xl font-medium text-gray-900">{percentage}%</div>
         <div className="text-sm text-gray-500">Accuracy</div>
       </div>
       

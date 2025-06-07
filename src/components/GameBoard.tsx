@@ -497,7 +497,7 @@ const GameBoard: React.FC = () => {
           // ------------- DESKTOP VIEW (Largely Unchanged) -------------
           <div className="flex-grow flex flex-col min-h-0 w-full">
             <div className="relative w-full mt-2"> {/* Reduced top margin */}
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                  {shuffledDesktopImages.map((image, index) => (
                    <ImageCard
                       key={image.id}
