@@ -62,6 +62,15 @@ const GameBoard: React.FC = () => {
   const { width, height } = useWindowSize();
   const isMobile = width < MOBILE_BREAKPOINT;
 
+  // Reserve space for header, score display and buttons so images never crop
+  const desktopReserved = 220;
+  const mobileReserved = 280;
+  const boardSize = Math.min(
+    isMobile ? width * 0.98 : width,
+    height - (isMobile ? mobileReserved : desktopReserved),
+    1024
+  );
+
   // --- Mobile State --- 
   const [masterMobileList, setMasterMobileList] = useState<Image[]>([]);
   const [currentMobileImage, setCurrentMobileImage] = useState<Image | null>(null);
@@ -420,7 +429,10 @@ const GameBoard: React.FC = () => {
           // ------------- MOBILE VIEW (Refactored) -------------
           <div className="flex flex-col items-center flex-grow relative w-full min-h-0">
             {/* --- Updated Mobile Image Container --- */}
-            <div className="relative w-[98%] mx-auto aspect-square flex justify-center items-center mb-1"> {/* Use 98% width */} 
+            <div
+              className="relative mx-auto aspect-square flex justify-center items-center mb-1"
+              style={{ width: boardSize, height: boardSize }}
+            >
               <AnimatePresence mode="wait" custom={swipeDirectionForExit}>
                 {currentMobileImage ? (
                   <motion.div
@@ -495,8 +507,11 @@ const GameBoard: React.FC = () => {
 
         ) : (
           // ------------- DESKTOP VIEW (Largely Unchanged) -------------
-          <div className="relative w-full mt-8"> {/* Reduced top margin back */} 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"> {/* Reduced bottom margin back */} 
+          <div className="relative mt-8 mx-auto" style={{ width: boardSize }}>
+             <div
+               className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"
+               style={{ width: boardSize, height: boardSize }}
+             >
                {shuffledDesktopImages.map((image, index) => (
                  <ImageCard
                     key={image.id}
@@ -512,7 +527,7 @@ const GameBoard: React.FC = () => {
                ))}
              </div>
              {/* ... Desktop Score Display ... */}
-             <div className="w-full flex justify-center mt-4 mb-1"> {/* Reduced top margin back */} 
+             <div className="w-full flex justify-center mt-4 mb-1" style={{ width: boardSize }}>
                 <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
               </div>
           </div>
@@ -520,7 +535,10 @@ const GameBoard: React.FC = () => {
       </div>
 
       {/* ... Desktop Feedback Button ... */}
-      <div className={`w-full flex justify-center ${isMobile ? 'flex-shrink-0' : ''}`}>
+      <div
+        className={`w-full flex justify-center ${isMobile ? 'flex-shrink-0' : ''}`}
+        style={!isMobile ? { width: boardSize } : undefined}
+      >
           { !isMobile && state.showFeedback && (
             <div className="mt-2"><Feedback isCorrect={state.isCorrect} onNext={() => { nextPair(); generateRandomPair(); }} /></div>
           )}
