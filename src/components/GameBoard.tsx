@@ -495,26 +495,28 @@ const GameBoard: React.FC = () => {
 
         ) : (
           // ------------- DESKTOP VIEW (Largely Unchanged) -------------
-          <div className="relative w-full mt-8 min-h-0"> {/* Add min-h-0 here */}
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"> {/* Reduced bottom margin back */} 
-               {shuffledDesktopImages.map((image, index) => (
-                 <ImageCard
-                    key={image.id}
-                    image={image}
-                    index={index}
-                    selected={state.selectedImageId === image.id}
-                    showResult={state.showFeedback && state.selectedImageId === image.id}
-                    isCorrect={state.isCorrect ?? false}
-                    onSelect={() => handleImageSelect(image.id)}
-                    disabled={state.showFeedback || !!state.selectedImageId}
-                    isMobileView={false}
-                 />
-               ))}
-             </div>
-             {/* ... Desktop Score Display ... */}
-             <div className="w-full flex justify-center mt-4 mb-1"> {/* Reduced top margin back */} 
-                <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
-              </div>
+          <div className="flex-grow flex flex-col min-h-0 w-full">
+            <div className="relative w-full mt-2"> {/* Reduced top margin */}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                 {shuffledDesktopImages.map((image, index) => (
+                   <ImageCard
+                      key={image.id}
+                      image={image}
+                      index={index}
+                      selected={state.selectedImageId === image.id}
+                      showResult={state.showFeedback && state.selectedImageId === image.id}
+                      isCorrect={state.isCorrect ?? false}
+                      onSelect={() => handleImageSelect(image.id)}
+                      disabled={state.showFeedback || !!state.selectedImageId}
+                      isMobileView={false}
+                   />
+                 ))}
+               </div>
+               {/* ... Desktop Score Display ... */}
+               <div className="w-full flex justify-center mt-4 mb-1">
+                  <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
+                </div>
+            </div>
           </div>
         )}
       </div>
