@@ -125,7 +125,7 @@ const GameBoard: React.FC = () => {
     }
     // dependencies: Run when isMobile changes, or on initial mount for the correct mode logic.
     // initializeMobileGame and generateRandomPair are stable callbacks.
-  }, [isMobile, initializeMobileGame, generateRandomPair]); // Removed currentPair
+  }, [isMobile, initializeMobileGame, generateRandomPair, currentPair]);
 
   const handleResetGame = () => {
     resetGame(); // Reset score, streak etc.
@@ -141,17 +141,17 @@ const GameBoard: React.FC = () => {
   };
 
   // --- Desktop Image Selection ---
-  const handleImageSelect = (imageId: string) => {
+  const handleImageSelect = useCallback((imageId: string) => {
     if (state.selectedImageId || state.showFeedback || isMobile) return;
     selectImage(imageId);
     if (currentPair) {
       const isCorrect = imageId === currentPair.realImage.id;
       showFeedback(isCorrect);
     }
-  };
+  }, [state.selectedImageId, state.showFeedback, isMobile, currentPair, selectImage, showFeedback]);
 
   // --- Mobile Guessing Logic ---
-  const handleMobileGuess = (guess: 'real' | 'ai') => {
+  const handleMobileGuess = useCallback((guess: 'real' | 'ai') => {
     if (state.showFeedback || !currentMobileImage || !isMobile || isAdvancing) return;
     const isCorrect = (guess === 'real' && !currentMobileImage.isAI) || (guess === 'ai' && currentMobileImage.isAI);
     showFeedback(isCorrect);
@@ -159,7 +159,7 @@ const GameBoard: React.FC = () => {
     // Attempt to blur buttons immediately after guess
     realButtonRef.current?.blur();
     aiButtonRef.current?.blur();
-  };
+  }, [state.showFeedback, currentMobileImage, isMobile, isAdvancing, showFeedback]);
 
   // --- Mobile Advancement Logic --- 
   const advanceMobileImage = useCallback(() => {
@@ -298,7 +298,7 @@ const GameBoard: React.FC = () => {
   }, [isMobile]);
 
   // --- Keyboard & Drag handlers ---
-  const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
     // If feedback is showing, don't allow key presses
     if (state.showFeedback) {
       return;
@@ -322,7 +322,7 @@ const GameBoard: React.FC = () => {
         handleMobileGuess('ai');
       }
     }
-  };
+  }, [state.showFeedback, isMobile, currentPair, getShuffledImages, handleImageSelect, currentMobileImage, handleMobileGuess]);
 
    // Effect to add and remove event listener
    useEffect(() => {
@@ -476,11 +476,11 @@ const GameBoard: React.FC = () => {
               {currentMobileImage && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.5 }} className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-1">
                   <motion.button ref={realButtonRef} key={`real-button-${buttonResetKey}`} onClick={() => handleMobileGuess('real')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 0.3 : 1) : 1 }} transition={{ duration: 0.2 }}
-                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:hover:bg-gray-50' : ''}`}>
+                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'md:hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">📷</span> Real
                   </motion.button>
                   <motion.button ref={aiButtonRef} key={`ai-button-${buttonResetKey}`} onClick={() => handleMobileGuess('ai')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 1 : 0.3) : 1 }} transition={{ duration: 0.2 }}
-                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'hover:hover:bg-gray-50' : ''}`}>
+                    className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'md:hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">🤖</span> AI
                   </motion.button>
                 </motion.div>
