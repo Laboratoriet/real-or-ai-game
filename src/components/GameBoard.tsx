@@ -77,6 +77,10 @@ const GameBoard: React.FC = () => {
   const [swipeDirectionForExit, setSwipeDirectionForExit] = useState<'left' | 'right' | null>(null);
   // Ref for drag position (used by mobile)
   const x = useMotionValue(0);
+  const rotate = useTransform(x, [-150, 150], [-10, 10]);
+  const imageOpacity = useTransform(x, [-100, 0, 100], [0.5, 1, 0.5]);
+  const aiOpacity = useTransform(x, [-100, -25, 0], [1, 0, 0]);
+  const realOpacity = useTransform(x, [0, 25, 100], [0, 0, 1]);
 
   // Refs for mobile buttons
   const realButtonRef = useRef<HTMLButtonElement>(null);
@@ -84,25 +88,21 @@ const GameBoard: React.FC = () => {
 
   // --- Initialization and Reset Logic ---
   const initializeMobileGame = useCallback(() => {
-    console.log("[Mobile Init] Initializing mobile game...");
     setMobileLoading(true);
     setMobileError(null);
     try {
       const allImages = getAllUniqueImages();
       if (allImages.length === 0) {
-        console.error('[Mobile Init] No unique images found!');
         setMobileError('No images available for the game.');
         setMasterMobileList([]);
         setCurrentMobileImage(null);
       } else {
-        console.log(`[Mobile Init] Setting master list with ${allImages.length} images.`);
         setMasterMobileList(allImages);
         setCurrentMobileImage(allImages[0]); // Set the first image
         setMasterMobileIndex(0);
         setUniqueImagesShownCount(0);
       }
-    } catch (err) {
-        console.error('[Mobile Init] Error getting unique images:', err);
+    } catch {
         setMobileError('Failed to load images.');
     }
     setMobileLoading(false);
@@ -111,16 +111,11 @@ const GameBoard: React.FC = () => {
   // Initialize on mount if mobile
   useEffect(() => {
     if (isMobile) {
-      console.log("Effect: isMobile is true, initializing mobile...");
       initializeMobileGame();
     } else {
        // If starting on desktop, generate initial pair ONLY if not already loaded
-       console.log("Effect: isMobile is false, checking desktop pair...");
        if (!currentPair) {
-         console.log("Effect: Desktop pair not loaded, generating...");
          generateRandomPair();
-       } else {
-         console.log("Effect: Desktop pair already loaded.");
        }
     }
     // Cleanup ref on unmount
@@ -128,12 +123,11 @@ const GameBoard: React.FC = () => {
        if (nextActionTimerRef.current) clearTimeout(nextActionTimerRef.current);
        if (confettiTimerRef.current) clearTimeout(confettiTimerRef.current);
     }
-    // Dependencies: Run when isMobile changes, or on initial mount for the correct mode logic.
+    // dependencies: Run when isMobile changes, or on initial mount for the correct mode logic.
     // initializeMobileGame and generateRandomPair are stable callbacks.
   }, [isMobile, initializeMobileGame, generateRandomPair]); // Removed currentPair
 
   const handleResetGame = () => {
-    console.log("Resetting game...");
     resetGame(); // Reset score, streak etc.
     // Clear confetti if showing
     if (confettiTimerRef.current) clearTimeout(confettiTimerRef.current);
@@ -169,7 +163,6 @@ const GameBoard: React.FC = () => {
 
   // --- Mobile Advancement Logic --- 
   const advanceMobileImage = useCallback(() => {
-    console.log('[Mobile Advance] Advancing...');
     setIsAdvancing(true); // Block interactions START
 
     let nextIndex = masterMobileIndex + 1;
@@ -181,10 +174,8 @@ const GameBoard: React.FC = () => {
     if (newUniqueCount >= UNIQUE_DISPLAY_COUNT_TARGET || nextIndex >= currentList.length) {
       // Only log reshuffle reason if list has items
       if (currentList.length > 0) {
-         console.warn(`[Mobile Advance] Reshuffling master list. Reason: ${newUniqueCount >= UNIQUE_DISPLAY_COUNT_TARGET ? 'Reached unique target' : 'End of list'}. Unique shown: ${newUniqueCount}`);
          needsReshuffle = true;
       } else {
-         console.error('[Mobile Advance] Cannot advance, master list is empty.');
          setCurrentMobileImage(null); // No image to show
          return;
       }
@@ -200,20 +191,18 @@ const GameBoard: React.FC = () => {
 
     // Ensure the list is not empty after potential shuffle
     if (currentList.length === 0) {
-      console.error('[Mobile Advance] Master list empty after potential reshuffle.');
       setCurrentMobileImage(null);
       return;
     }
     
     // Handle potential infinite loop if list has only 1 item and we reshuffle
     if (currentList.length === 1 && needsReshuffle) {
-        console.warn('[Mobile Advance] List has only one item, cannot guarantee different image after reshuffle.');
+        // This is a rare edge case, but good to handle.
     }
 
     setCurrentMobileImage(currentList[nextIndex]);
     setMasterMobileIndex(nextIndex);
     setUniqueImagesShownCount(newUniqueCount);
-    console.log(`[Mobile Advance] New index: ${nextIndex}, New unique count: ${newUniqueCount}`);
     
     // Reset swipe animation state
     setSwipeDirectionForExit(null);
@@ -242,7 +231,6 @@ const GameBoard: React.FC = () => {
 
     if (state.showFeedback) {
       clearExistingTimer();
-      console.log('Setting feedback timer...');
       nextActionTimerRef.current = setTimeout(() => {
         if (isMobile) {
           advanceMobileImage();
@@ -265,15 +253,24 @@ const GameBoard: React.FC = () => {
         confettiTimerRef.current = null;
       }
     };
-    if (state.showFeedback && state.isCorrect && state.correctStreak > 0 && state.correctStreak % 10 === 0) {
-      setShowConfetti(true);
-      clearConfettiTimer();
-      confettiTimerRef.current = setTimeout(() => setShowConfetti(false), 5000);
-    } else if (!state.showFeedback) {
-       // Optional: stop confetti immediately if feedback dismissed early
+    if (state.isCorrect && state.showFeedback) {
+      // Perfect score logic
+      if (state.correctStreak > 0 && state.correctStreak % 5 === 0) {
+        setShowConfetti(true);
+        clearConfettiTimer(); // Clear any existing timer
+        confettiTimerRef.current = setTimeout(() => {
+          setShowConfetti(false);
+        }, 4000); // Confetti lasts for 4 seconds
+      }
+    } else if (!state.isCorrect && state.showFeedback) {
+       // Stop confetti immediately on incorrect answer
+       setShowConfetti(false);
+       clearConfettiTimer();
     }
-    return clearConfettiTimer;
-  }, [state.isCorrect, state.correctStreak, state.showFeedback]);
+    
+    // Cleanup on unmount
+    return () => clearConfettiTimer();
+  }, [state.isCorrect, state.showFeedback, state.correctStreak]);
 
   // Disable body scroll on mobile for better swipe experience
   useEffect(() => {
@@ -300,81 +297,61 @@ const GameBoard: React.FC = () => {
     };
   }, [isMobile]);
 
-  // --- Adjusted Keyboard Handler ---
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === '1' || event.key === '2') {
-        event.preventDefault();
-      }
-
-      // Simplified Guard
-      if (state.showFeedback || isAdvancing) return;
-
-      if (isMobile) {
-         if (!currentMobileImage || mobileLoading) return; // Guard against no image or loading
-         if (event.key === '1') handleMobileGuess('real');
-         else if (event.key === '2') handleMobileGuess('ai');
-      } else {
-         // Desktop Logic
-         if (pairLoading || !currentPair || state.selectedImageId) return;
-         const currentShuffledImages = getShuffledImages();
-         if (currentShuffledImages.length !== 2) return;
-         let selectedImageId: string | null = null;
-         if (event.key === 'ArrowLeft') selectedImageId = currentShuffledImages[0].id;
-         else if (event.key === 'ArrowRight') selectedImageId = currentShuffledImages[1].id;
-         if (selectedImageId) handleImageSelect(selectedImageId);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    isMobile,
-    state.showFeedback,
-    state.selectedImageId,
-    pairLoading,
-    mobileLoading,
-    currentPair,
-    currentMobileImage,
-    getShuffledImages,
-    handleMobileGuess,
-    handleImageSelect,
-    isAdvancing,
-  ]);
-
-  // --- Motion Values for Drag Animation (Keep) ---
-  // const x = useMotionValue(0);
-  const threshold = 25;
-  const maxDrag = 150;
-  const aiOpacity = useTransform(x, [-maxDrag * 0.8, -threshold, 0], [1, 0, 0]);
-  const realOpacity = useTransform(x, [0, threshold, maxDrag * 0.8], [0, 0, 1]);
-  const rotate = useTransform(x, [-maxDrag * 1.5, maxDrag * 1.5], [-15, 15], { clamp: false });
-  const imageOpacity = useTransform(x, [-maxDrag, -maxDrag * 0.5, 0, maxDrag * 0.5, maxDrag], [0.3, 0.7, 1, 0.7, 0.3]);
-
-  // --- Drag End Handler (Keep, simplify swipe direction setting) ---
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number, y: number }, velocity: { x: number, y: number } }) => {
-    const dragThreshold = 100;
-    const velocityThreshold = 300;
-    let direction: 'left' | 'right' | null = null;
-
-    // Add isAdvancing guard here too
-    if (isAdvancing || state.showFeedback) {
-       // If advancing or showing feedback, just snap back
-       animate(x, 0, { type: "spring", stiffness: 350, damping: 35 });
-       setSwipeDirectionForExit(null);
-       return;
+  // --- Keyboard & Drag handlers ---
+  const handleKeyDown = (event: KeyboardEvent) => {
+    // If feedback is showing, don't allow key presses
+    if (state.showFeedback) {
+      return;
     }
 
-    if (info.offset.x < -dragThreshold || info.velocity.x < -velocityThreshold) direction = 'left'; // Left swipe = AI Guess
-    else if (info.offset.x > dragThreshold || info.velocity.x > velocityThreshold) direction = 'right'; // Right swipe = Real Guess
+    // On desktop, allow left/right arrow keys to select image
+    if (!isMobile && currentPair) {
+      if (event.key === 'ArrowLeft') {
+        const currentShuffled = getShuffledImages();
+        if (currentShuffled.length > 0) handleImageSelect(currentShuffled[0].id);
+      } else if (event.key === 'ArrowRight') {
+        const currentShuffled = getShuffledImages();
+        if (currentShuffled.length > 1) handleImageSelect(currentShuffled[1].id);
+      }
+    }
+    // On mobile, allow left/right arrow keys for "Real" or "AI"
+    else if (isMobile && currentMobileImage) {
+      if (event.key === 'ArrowLeft') {
+        handleMobileGuess('real');
+      } else if (event.key === 'ArrowRight') {
+        handleMobileGuess('ai');
+      }
+    }
+  };
 
-    if (direction) {
-        const guess = direction === 'left' ? 'ai' : 'real';
-        console.log(`Swipe ${direction} triggered guess: ${guess}`);
-        handleMobileGuess(guess);
-        setSwipeDirectionForExit(direction); // Set direction for exit animation
+   // Effect to add and remove event listener
+   useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]); // Dependency array is important
+
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number, y: number }, velocity: { x: number, y: number } }) => {
+    if (!isMobile || isAdvancing || state.showFeedback) return;
+
+    const swipeThreshold = width / 4; // Swipe 1/4 of the screen to trigger a guess
+    const swipeVelocityThreshold = 400; // Velocity threshold for a flick
+
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+
+    if (offset > swipeThreshold || velocity > swipeVelocityThreshold) {
+      // Swiped Right ("AI")
+      setSwipeDirectionForExit('right');
+      handleMobileGuess('ai');
+    } else if (offset < -swipeThreshold || velocity < -swipeVelocityThreshold) {
+      // Swiped Left ("Real")
+      setSwipeDirectionForExit('left');
+      handleMobileGuess('real');
     } else {
-        animate(x, 0, { type: "spring", stiffness: 350, damping: 35 });
-        setSwipeDirectionForExit(null);
+      // Didn't swipe far enough, animate back to center
+      animate(x, 0, { type: "spring", stiffness: 300, damping: 30 });
     }
   };
 
@@ -383,15 +360,11 @@ const GameBoard: React.FC = () => {
   const error = isMobile ? mobileError : pairError;
 
   if (error) {
-    return <div className="flex justify-center items-center h-64 text-red-600 text-center">Error: {error}</div>;
+    return <div className="game-board-container"><div className="error-message">Error: {error}</div></div>;
   }
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
-      </div>
-    );
+    return <div className="game-board-container"><div className="loading-spinner"></div></div>;
   }
 
   // --- Render Logic ---
