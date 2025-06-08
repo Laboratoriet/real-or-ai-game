@@ -79,8 +79,8 @@ const GameBoard: React.FC = () => {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-150, 150], [-10, 10]);
   const imageOpacity = useTransform(x, [-100, 0, 100], [0.5, 1, 0.5]);
-  const aiOpacity = useTransform(x, [-100, -25, 0], [1, 0, 0]);
-  const realOpacity = useTransform(x, [0, 25, 100], [0, 0, 1]);
+  const aiOpacity = useTransform(x, [0, 25, 100], [0, 0, 1]);
+  const realOpacity = useTransform(x, [-100, -25, 0], [1, 0, 0]);
 
   // Refs for mobile buttons
   const realButtonRef = useRef<HTMLButtonElement>(null);
@@ -375,7 +375,7 @@ const GameBoard: React.FC = () => {
       hidden: { opacity: 0, scale: 0.9, x: 0, rotate: 0 },
       visible: { opacity: 1, scale: 1, x: 0, rotate: 0 },
       exit: (direction: 'left' | 'right' | null) => ({
-          x: direction === 'left' ? -300 : direction === 'right' ? 300 : 0, // AI (left dir) flies LEFT, Real (right dir) flies RIGHT
+          x: direction === 'left' ? -300 : direction === 'right' ? 300 : 0, // A "Real" guess (swipe left) flies LEFT, an "AI" guess (swipe right) flies RIGHT.
           opacity: 0,
           scale: 0.8,
           rotate: direction === 'left' ? -15 : direction === 'right' ? 15 : 0,
@@ -419,6 +419,10 @@ const GameBoard: React.FC = () => {
         {isMobile ? (
           // ------------- MOBILE VIEW (Refactored) -------------
           <div className="flex flex-col items-center flex-grow relative w-full min-h-0">
+            {/* --- Score Display --- */}
+            <div className="w-full flex justify-center mb-2 flex-shrink-0">
+                <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
+            </div>
             {/* --- Updated Mobile Image Container --- */}
             <div className="relative w-[98%] mx-auto aspect-square flex justify-center items-center mb-1"> {/* Use 98% width */} 
               <AnimatePresence mode="wait" custom={swipeDirectionForExit}>
@@ -486,11 +490,6 @@ const GameBoard: React.FC = () => {
                 </motion.div>
               )}
             </div>
-
-            {/* ... Score Display ... */} 
-             <div className="w-full flex justify-center mt-1 mb-0 flex-shrink-0">
-                <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
-              </div>
           </div>
 
         ) : (
