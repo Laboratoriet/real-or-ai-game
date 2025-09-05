@@ -8,7 +8,7 @@ const initialState: Omit<GameState, 'currentCategory'> = {
   isCorrect: null,
   showFeedback: false,
   correctStreak: 0,
-  selectedCategory: 'all',
+  selectedCategory: 'people',
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
