@@ -28,6 +28,8 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
 }) => {
   const [feedback, setFeedback] = useState<DynamicFeedback | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCardPreview, setShowCardPreview] = useState(false);
+  const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
 
   const accuracy = totalAttempts > 0 ? Math.round((score / totalAttempts) * 100) : 0;
 
@@ -86,84 +88,106 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
   };
 
   const generateShareableCard = async () => {
-    // Create a canvas element for the shareable card
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    try {
+      // Create a canvas element for the shareable card
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        fallbackShare();
+        return;
+      }
 
-    // Set canvas size
-    canvas.width = 800;
-    canvas.height = 600;
+      // Set canvas size
+      canvas.width = 800;
+      canvas.height = 600;
 
-    // Create gradient background
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, '#667eea');
-    gradient.addColorStop(1, '#764ba2');
-    
-    // Fill background
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Create gradient background
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, '#667eea');
+      gradient.addColorStop(1, '#764ba2');
+      
+      // Fill background
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Add glassmorphism card background
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.fillRect(50, 50, canvas.width - 100, canvas.height - 100);
-    
-    // Add border
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(50, 50, canvas.width - 100, canvas.height - 100);
+      // Add glassmorphism card background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillRect(50, 50, canvas.width - 100, canvas.height - 100);
+      
+      // Add border
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(50, 50, canvas.width - 100, canvas.height - 100);
 
-    // Add text
-    ctx.fillStyle = 'white';
-    ctx.textAlign = 'center';
-    
-    // Title
-    ctx.font = 'bold 48px Arial';
-    ctx.fillText('Real or AI?', canvas.width / 2, 150);
-    
-    // Score
-    ctx.font = 'bold 72px Arial';
-    ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 250);
-    
-    // Accuracy
-    ctx.font = '36px Arial';
-    ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 300);
-    
-    // Feedback
-    ctx.font = '24px Arial';
-    ctx.fillText(feedback.title.replace(feedback.emoji, '').trim(), canvas.width / 2, 350);
-    
-    // Challenge text
-    ctx.font = '20px Arial';
-    ctx.fillText('Can you beat my score?', canvas.width / 2, 400);
-    
-    // URL
-    ctx.font = '16px Arial';
-    ctx.fillText('alkemist.no/realorai', canvas.width / 2, 500);
+      // Add text
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'center';
+      
+      // Title
+      ctx.font = 'bold 48px Arial';
+      ctx.fillText('Real or AI?', canvas.width / 2, 150);
+      
+      // Score
+      ctx.font = 'bold 72px Arial';
+      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 250);
+      
+      // Accuracy
+      ctx.font = '36px Arial';
+      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 300);
+      
+      // Feedback
+      ctx.font = '24px Arial';
+      ctx.fillText(feedback.title.replace(feedback.emoji, '').trim(), canvas.width / 2, 350);
+      
+      // Challenge text
+      ctx.font = '20px Arial';
+      ctx.fillText('Can you beat my score?', canvas.width / 2, 400);
+      
+      // URL
+      ctx.font = '16px Arial';
+      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 500);
 
-    // Convert to blob and share
-    canvas.toBlob(async (blob) => {
-      if (blob) {
-        const file = new File([blob], 'real-or-ai-score.png', { type: 'image/png' });
-        
-        if (navigator.share && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              title: 'My Real or AI Score!',
-              text: `I scored ${score}/${totalAttempts} (${accuracy}%) on Real or AI? Can you beat my score? 🎯`,
-              files: [file],
-            });
-          } catch (err) {
-            console.log('Error sharing image:', err);
-            // Fallback to text sharing
-            fallbackShare();
+      // Convert to blob and share
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const file = new File([blob], 'real-or-ai-score.png', { type: 'image/png' });
+          
+          // Check if we can share files
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: 'My Real or AI Score!',
+                text: `I scored ${score}/${totalAttempts} (${accuracy}%) on Real or AI? Can you beat my score? 🎯`,
+                files: [file],
+              });
+              return;
+            } catch (err) {
+              console.log('Error sharing image:', err);
+            }
           }
+          
+          // If file sharing fails, try to download the image
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'real-or-ai-score.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          // Also show fallback share
+          setTimeout(() => {
+            fallbackShare();
+          }, 1000);
         } else {
-          // Fallback to text sharing
           fallbackShare();
         }
-      }
-    }, 'image/png');
+      }, 'image/png');
+    } catch (error) {
+      console.log('Error generating shareable card:', error);
+      fallbackShare();
+    }
   };
 
   const fallbackShare = async () => {
@@ -192,7 +216,73 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
   };
 
   const handleShare = async () => {
+    // First generate and show the card preview
+    await generateCardPreview();
+    // Then proceed with sharing
     await generateShareableCard();
+  };
+
+  const generateCardPreview = async () => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      canvas.width = 800;
+      canvas.height = 600;
+
+      // Create gradient background
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, '#667eea');
+      gradient.addColorStop(1, '#764ba2');
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Add glassmorphism card background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillRect(50, 50, canvas.width - 100, canvas.height - 100);
+      
+      // Add border
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(50, 50, canvas.width - 100, canvas.height - 100);
+
+      // Add text
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'center';
+      
+      // Title
+      ctx.font = 'bold 48px Arial';
+      ctx.fillText('Real or AI?', canvas.width / 2, 150);
+      
+      // Score
+      ctx.font = 'bold 72px Arial';
+      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 250);
+      
+      // Accuracy
+      ctx.font = '36px Arial';
+      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 300);
+      
+      // Feedback
+      ctx.font = '24px Arial';
+      ctx.fillText(feedback?.title.replace(feedback?.emoji, '').trim() || '', canvas.width / 2, 350);
+      
+      // Challenge text
+      ctx.font = '20px Arial';
+      ctx.fillText('Can you beat my score?', canvas.width / 2, 400);
+      
+      // URL
+      ctx.font = '16px Arial';
+      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 500);
+
+      // Convert to data URL for preview
+      const dataUrl = canvas.toDataURL('image/png');
+      setCardImageUrl(dataUrl);
+      setShowCardPreview(true);
+    } catch (error) {
+      console.log('Error generating card preview:', error);
+    }
   };
 
   const categories: FilterCategory[] = ['all', 'people', 'nature', 'city', 'interior'];
@@ -305,6 +395,39 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
           Made with ❤️ by <a href="https://alkemist.no" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-gray-900">Alkemist</a>
         </p>
       </div>
+
+      {/* Card Preview Modal */}
+      {showCardPreview && cardImageUrl && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Your Shareable Card</h3>
+              <button
+                onClick={() => setShowCardPreview(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mb-4">
+              <img 
+                src={cardImageUrl} 
+                alt="Shareable score card" 
+                className="w-full rounded-lg shadow-lg"
+              />
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              This beautiful card has been generated and will be shared with your score!
+            </p>
+            <button
+              onClick={() => setShowCardPreview(false)}
+              className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
