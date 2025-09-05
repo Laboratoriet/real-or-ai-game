@@ -211,6 +211,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
           Share Score
         </button>
       </motion.div>
+      </motion.div>
 
       {/* Footer */}
       <div className="flex justify-center">
