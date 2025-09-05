@@ -121,11 +121,26 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
         img.src = randomImage;
       });
 
-      // Draw the background image
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      // Draw the background image with proper cropping (not stretching)
+      const imgAspectRatio = img.width / img.height;
+      const canvasAspectRatio = canvas.width / canvas.height;
+      
+      let sourceX = 0, sourceY = 0, sourceWidth = img.width, sourceHeight = img.height;
+      
+      if (imgAspectRatio > canvasAspectRatio) {
+        // Image is wider than canvas - crop width
+        sourceWidth = img.height * canvasAspectRatio;
+        sourceX = (img.width - sourceWidth) / 2;
+      } else {
+        // Image is taller than canvas - crop height
+        sourceHeight = img.width / canvasAspectRatio;
+        sourceY = (img.height - sourceHeight) / 2;
+      }
+      
+      ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
 
-      // Add subtle overlay for better text readability
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      // Add very subtle overlay for better text readability
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Create rounded rectangle path for glassmorphism card with more padding
@@ -133,17 +148,17 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       const cardY = 120;
       const cardWidth = canvas.width - 240;
       const cardHeight = canvas.height - 240;
-      const cornerRadius = 50; // More corner radius
+      const cornerRadius = 16; // Match the CSS generator
 
-      // Draw rounded rectangle background with proper glass effect
+      // Draw rounded rectangle background with exact glassmorphism settings
       ctx.beginPath();
       ctx.roundRect(cardX, cardY, cardWidth, cardHeight, cornerRadius);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.38)'; // Exact from CSS generator
       ctx.fill();
       
-      // Add border with glass effect
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.lineWidth = 2;
+      // Add border with exact glassmorphism settings
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.51)'; // Exact from CSS generator
+      ctx.lineWidth = 1;
       ctx.stroke();
 
       // Load and draw the logo with proper aspect ratio
@@ -331,11 +346,26 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
         img.src = randomImage;
       });
 
-      // Draw the background image
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      // Draw the background image with proper cropping (not stretching)
+      const imgAspectRatio = img.width / img.height;
+      const canvasAspectRatio = canvas.width / canvas.height;
+      
+      let sourceX = 0, sourceY = 0, sourceWidth = img.width, sourceHeight = img.height;
+      
+      if (imgAspectRatio > canvasAspectRatio) {
+        // Image is wider than canvas - crop width
+        sourceWidth = img.height * canvasAspectRatio;
+        sourceX = (img.width - sourceWidth) / 2;
+      } else {
+        // Image is taller than canvas - crop height
+        sourceHeight = img.width / canvasAspectRatio;
+        sourceY = (img.height - sourceHeight) / 2;
+      }
+      
+      ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
 
-      // Add subtle overlay for better text readability
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      // Add very subtle overlay for better text readability
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Create rounded rectangle path for glassmorphism card with more padding
@@ -343,17 +373,17 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       const cardY = 120;
       const cardWidth = canvas.width - 240;
       const cardHeight = canvas.height - 240;
-      const cornerRadius = 50; // More corner radius
+      const cornerRadius = 16; // Match the CSS generator
 
-      // Draw rounded rectangle background with proper glass effect
+      // Draw rounded rectangle background with exact glassmorphism settings
       ctx.beginPath();
       ctx.roundRect(cardX, cardY, cardWidth, cardHeight, cornerRadius);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.38)'; // Exact from CSS generator
       ctx.fill();
       
-      // Add border with glass effect
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.lineWidth = 2;
+      // Add border with exact glassmorphism settings
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.51)'; // Exact from CSS generator
+      ctx.lineWidth = 1;
       ctx.stroke();
 
       // Load and draw the logo with proper aspect ratio
