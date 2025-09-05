@@ -54,11 +54,6 @@ const ImageCard: React.FC<ImageCardProps> = ({
       } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       onClick={() => !disabled && onSelect(image.id)}
     >
-      {!isMobileView && (
-        <div className="absolute top-3 left-3 bg-white text-gray-900 font-medium text-sm px-3 py-1 rounded-full shadow-sm z-10">
-          {index === 0 ? 'A' : 'B'}
-        </div>
-      )}
       
       <img
         src={displaySrc}

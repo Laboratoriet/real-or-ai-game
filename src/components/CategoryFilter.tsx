@@ -103,7 +103,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   }
 
   return (
-    <div className="w-full max-w-lg mx-auto mb-4">
+    <div className="w-full max-w-lg mx-auto mb-6">
       <div className="flex justify-center gap-6">
         {categories.map((category) => {
           const isSelected = selectedCategory === category;

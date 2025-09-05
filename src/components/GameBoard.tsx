@@ -425,14 +425,11 @@ const GameBoard: React.FC = () => {
             />
           </>
         ) : (
-          // --- Desktop Header: Logo + Instruction Text + Category Filter ---
+          // --- Desktop Header: Logo + Category Filter ---
           <>
             <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-6">
               <img src="/realorai.svg" alt="Real or AI Logo" className="h-8 w-auto" /> {/* Reduced height */} 
             </a>
-            <p className="text-gray-600 text-center sm:text-base lg:text-lg mb-4">
-              Click on the image you think is <strong>AI-generated</strong>.
-            </p>
             <CategoryFilter 
               selectedCategory={state.selectedCategory}
               onCategoryChange={handleCategoryChange}
@@ -539,8 +536,14 @@ const GameBoard: React.FC = () => {
                    />
                  ))}
                </div>
+               {/* ... Desktop Instruction Text ... */}
+               <div className="w-full flex justify-center mt-4 mb-2">
+                 <p className="text-gray-600 text-center text-base">
+                   Click on the image you think is <strong>AI-generated</strong>.
+                 </p>
+               </div>
                {/* ... Desktop Score Display ... */}
-               <div className="w-full flex justify-center mt-4 mb-1">
+               <div className="w-full flex justify-center mt-2 mb-1">
                   <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
                 </div>
             </div>
