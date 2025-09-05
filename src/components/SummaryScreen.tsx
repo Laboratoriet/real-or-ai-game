@@ -125,9 +125,9 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
   if (!feedback) return null;
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col justify-between p-8">
       {/* Logo */}
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center">
         <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer">
           <img src="/realorai.svg" alt="Real or AI Logo" className="h-8 w-auto" />
         </a>
@@ -137,7 +137,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-2xl mx-auto text-center flex-grow flex flex-col justify-center"
+        className="w-full max-w-2xl mx-auto text-center"
       >
       {/* Score Display */}
       <div className="mb-8">
@@ -213,7 +213,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       </motion.div>
 
       {/* Footer */}
-      <div className="flex justify-center mt-8">
+      <div className="flex justify-center">
         <p className="text-sm text-gray-500">
           Made with ❤️ by <a href="https://alkemist.no" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-gray-900">Alkemist</a>
         </p>
