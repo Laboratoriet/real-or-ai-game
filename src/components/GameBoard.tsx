@@ -165,8 +165,10 @@ const GameBoard: React.FC = () => {
   // --- Mobile Guessing Logic ---
   const handleMobileGuess = useCallback((guess: 'real' | 'ai') => {
     if (state.showFeedback || !currentMobileImage || !isMobile || isAdvancing) return;
-    // Flipped logic: now we're asking which image is AI, so guess 'ai' is correct if image is AI
-    const isCorrect = guess === 'ai' && currentMobileImage.isAI;
+    // Logic: you get a point if you correctly identify what the image actually is
+    // - Tap "AI" if you think it's AI-generated (correct if image.isAI is true)
+    // - Tap "Real" if you think it's real (correct if image.isAI is false)
+    const isCorrect = (guess === 'ai' && currentMobileImage.isAI) || (guess === 'real' && !currentMobileImage.isAI);
     showFeedback(isCorrect);
 
     // Attempt to blur buttons immediately after guess
