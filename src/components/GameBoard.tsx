@@ -537,13 +537,13 @@ const GameBoard: React.FC = () => {
                  ))}
                </div>
                {/* ... Desktop Instruction Text ... */}
-               <div className="w-full flex justify-center mt-4 mb-2">
+               <div className="w-full flex justify-center mt-8 mb-4">
                  <p className="text-gray-600 text-center text-base">
                    Click on the image you think is <strong>AI-generated</strong>.
                  </p>
                </div>
                {/* ... Desktop Score Display ... */}
-               <div className="w-full flex justify-center mt-2 mb-1">
+               <div className="w-full flex justify-center mt-4 mb-1">
                   <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
                 </div>
             </div>
