@@ -141,7 +141,8 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       >
       {/* Score Display */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{feedback.title}</h1>
+        <div className="text-6xl mb-4">{feedback.emoji}</div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{feedback.title.replace(feedback.emoji, '').trim()}</h1>
         <div className="text-4xl font-bold text-gray-900 mb-2">
           {score}/{totalAttempts}
         </div>
