@@ -195,7 +195,7 @@ const GameBoard: React.FC = () => {
     showFeedback(isCorrect);
 
     // Check if we've reached 10 attempts
-    if (state.totalAttempts + 1 === 10) {
+    if (state.totalAttempts + 1 >= 10) {
       setTimeout(() => {
         showSummary();
       }, 1000); // Show summary after feedback
