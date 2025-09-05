@@ -176,12 +176,6 @@ const GameBoard: React.FC = () => {
       const isCorrect = imageId === currentPair.aiImage.id;
       showFeedback(isCorrect);
       
-      // Check if we've reached 10 attempts
-      if (state.totalAttempts + 1 === 10) {
-        setTimeout(() => {
-          showSummary();
-        }, 1000); // Show summary after feedback
-      }
     }
   }, [state.selectedImageId, state.showFeedback, state.totalAttempts, isMobile, currentPair, selectImage, showFeedback, showSummary]);
 
@@ -194,12 +188,6 @@ const GameBoard: React.FC = () => {
     const isCorrect = (guess === 'ai' && currentMobileImage.isAI) || (guess === 'real' && !currentMobileImage.isAI);
     showFeedback(isCorrect);
 
-    // Check if we've reached 10 attempts
-    if (state.totalAttempts + 1 >= 10) {
-      setTimeout(() => {
-        showSummary();
-      }, 1000); // Show summary after feedback
-    }
 
     // Attempt to blur buttons immediately after guess
     realButtonRef.current?.blur();
@@ -289,6 +277,15 @@ const GameBoard: React.FC = () => {
 
     return clearExistingTimer;
   }, [state.showFeedback, isMobile, advanceMobileImage, nextPair, generateRandomPair, state.selectedCategory]);
+
+  // --- Game End Check ---
+  useEffect(() => {
+    if (state.totalAttempts >= 10 && state.showFeedback) {
+      setTimeout(() => {
+        showSummary();
+      }, 1000); // Show summary after feedback
+    }
+  }, [state.totalAttempts, state.showFeedback, showSummary]);
 
   // --- Confetti Effect (Keep) ---
    useEffect(() => {
