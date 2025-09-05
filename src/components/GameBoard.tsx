@@ -411,17 +411,10 @@ const GameBoard: React.FC = () => {
       {/* --- Header Section (Refactored) --- */}
       <div className="mb-6 pt-2 flex flex-col items-center"> 
         {isMobile ? (
-          // --- Mobile Header: Logo + Category Filter ---
-          <>
-            <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-4">
-              <img src="/realorai.svg" alt="Real or AI Logo" className="h-6 w-auto" /> {/* Reduced height */} 
-            </a>
-            <CategoryFilter 
-              selectedCategory={state.selectedCategory}
-              onCategoryChange={handleCategoryChange}
-              isMobile={true}
-            />
-          </>
+          // --- Mobile Header: Just the Logo ---
+          <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-4">
+            <img src="/realorai.svg" alt="Real or AI Logo" className="h-6 w-auto" /> {/* Reduced height */} 
+          </a>
         ) : (
           // --- Desktop Header: Logo + Instruction Text + Category Filter ---
           <>
@@ -444,10 +437,6 @@ const GameBoard: React.FC = () => {
         {isMobile ? (
           // ------------- MOBILE VIEW (Refactored) -------------
           <div className="flex flex-col items-center flex-grow relative w-full min-h-0">
-            {/* --- Score Display --- */}
-            <div className="w-full flex justify-center mb-2 flex-shrink-0">
-                <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
-            </div>
             {/* --- Updated Mobile Image Container --- */}
             <div className="relative w-[98%] mx-auto aspect-square flex justify-center items-center mb-1"> {/* Use 98% width */} 
               <AnimatePresence mode="wait" custom={swipeDirectionForExit}>
@@ -503,7 +492,7 @@ const GameBoard: React.FC = () => {
             {/* ... Mobile Buttons ... */} 
             <div className="flex-shrink-0 w-full">
               {currentMobileImage && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.5 }} className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-1">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.5 }} className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-3">
                   <motion.button ref={realButtonRef} key={`real-button-${buttonResetKey}`} onClick={() => handleMobileGuess('real')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? 0.3 : 1 }} transition={{ duration: 0.2 }}
                     className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'md:hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">📷</span> Real
@@ -514,6 +503,11 @@ const GameBoard: React.FC = () => {
                   </motion.button>
                 </motion.div>
               )}
+            </div>
+
+            {/* --- Score Display (Moved below buttons) --- */}
+            <div className="w-full flex justify-center mb-4 flex-shrink-0">
+                <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
             </div>
           </div>
 
@@ -551,6 +545,17 @@ const GameBoard: React.FC = () => {
             <div className="mt-2"><Feedback isCorrect={state.isCorrect} onNext={() => { nextPair(); generateRandomPair(state.selectedCategory); }} /></div>
           )}
       </div>
+
+      {/* --- Mobile Category Filter (Bottom) --- */}
+      {isMobile && (
+        <div className="w-full flex justify-center mt-4 mb-2">
+          <CategoryFilter 
+            selectedCategory={state.selectedCategory}
+            onCategoryChange={handleCategoryChange}
+            isMobile={true}
+          />
+        </div>
+      )}
     </div>
   );
 };
