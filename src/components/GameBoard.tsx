@@ -147,6 +147,7 @@ const GameBoard: React.FC = () => {
 
   const handleCategoryChange = (category: 'all' | 'people' | 'nature' | 'city' | 'interior') => {
     setCategory(category);
+    resetGame(); // Reset score and game state when changing category
     hideSummary(); // Hide summary when changing category
     
     if (isMobile) {
@@ -176,7 +177,7 @@ const GameBoard: React.FC = () => {
       showFeedback(isCorrect);
       
       // Check if we've reached 10 attempts
-      if (state.totalAttempts + 1 >= 10) {
+      if (state.totalAttempts + 1 === 10) {
         setTimeout(() => {
           showSummary();
         }, 1000); // Show summary after feedback
@@ -194,7 +195,7 @@ const GameBoard: React.FC = () => {
     showFeedback(isCorrect);
 
     // Check if we've reached 10 attempts
-    if (state.totalAttempts + 1 >= 10) {
+    if (state.totalAttempts + 1 === 10) {
       setTimeout(() => {
         showSummary();
       }, 1000); // Show summary after feedback

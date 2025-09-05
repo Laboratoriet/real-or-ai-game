@@ -119,17 +119,17 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       // Draw the pre-made gradient card (it's already 1024x1024)
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Add only the score and accuracy text in the same positions as the example
+      // Add only the score and accuracy text centered in the square
       ctx.fillStyle = '#2C2C2C'; // Dark gray color from the example
       ctx.textAlign = 'center';
       
-      // Score (most prominent, same position as "8/10" in example)
-      ctx.font = 'bold 80px Arial, sans-serif';
-      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 420);
+      // Score (most prominent, centered in the square)
+      ctx.font = 'bold 100px Arial, sans-serif';
+      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, canvas.height / 2 - 40);
       
-      // Accuracy (same position as "78% Accuracy" in example)
-      ctx.font = '48px Arial, sans-serif';
-      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 480);
+      // Accuracy (centered below score)
+      ctx.font = '56px Arial, sans-serif';
+      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, canvas.height / 2 + 40);
 
       // Convert to blob and share
       canvas.toBlob(async (blob) => {
@@ -274,17 +274,17 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       // Draw the pre-made gradient card (it's already 1024x1024)
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Add only the score and accuracy text in the same positions as the example
+      // Add only the score and accuracy text centered in the square
       ctx.fillStyle = '#2C2C2C'; // Dark gray color from the example
       ctx.textAlign = 'center';
       
-      // Score (most prominent, same position as "8/10" in example)
-      ctx.font = 'bold 80px Arial, sans-serif';
-      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 420);
+      // Score (most prominent, centered in the square)
+      ctx.font = 'bold 100px Arial, sans-serif';
+      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, canvas.height / 2 - 40);
       
-      // Accuracy (same position as "78% Accuracy" in example)
-      ctx.font = '48px Arial, sans-serif';
-      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 480);
+      // Accuracy (centered below score)
+      ctx.font = '56px Arial, sans-serif';
+      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, canvas.height / 2 + 40);
 
       // Convert to data URL for preview and blob for sharing
       const dataUrl = canvas.toDataURL('image/png');
