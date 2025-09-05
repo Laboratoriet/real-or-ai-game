@@ -98,9 +98,9 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
         return;
       }
 
-      // Set canvas size
-      canvas.width = 800;
-      canvas.height = 600;
+      // Set canvas size to square format
+      canvas.width = 1024;
+      canvas.height = 1024;
 
       // Get a random AI image
       const aiImages = [
@@ -129,21 +129,21 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Create rounded rectangle path for glassmorphism card
-      const cardX = 50;
-      const cardY = 50;
-      const cardWidth = canvas.width - 100;
-      const cardHeight = canvas.height - 100;
-      const cornerRadius = 30; // Much more corner radius
+      const cardX = 80;
+      const cardY = 80;
+      const cardWidth = canvas.width - 160;
+      const cardHeight = canvas.height - 160;
+      const cornerRadius = 40; // More corner radius for square format
 
-      // Draw rounded rectangle background with strong glass effect
+      // Draw rounded rectangle background with proper glass effect
       ctx.beginPath();
       ctx.roundRect(cardX, cardY, cardWidth, cardHeight, cornerRadius);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
       ctx.fill();
       
       // Add border with glass effect
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.51)';
+      ctx.lineWidth = 1;
       ctx.stroke();
 
       // Load and draw the logo
@@ -157,34 +157,34 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       });
 
       // Draw logo at the top
-      const logoSize = 80;
+      const logoSize = 100;
       const logoX = (canvas.width - logoSize) / 2;
-      const logoY = 100;
+      const logoY = 150;
       ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
 
-      // Add text with improved spacing and font sizes
+      // Add text with improved spacing and font sizes using Futura
       ctx.fillStyle = 'white';
       ctx.textAlign = 'center';
       
-      // Title (smaller, more elegant)
-      ctx.font = 'bold 36px Arial';
-      ctx.fillText('Real or AI?', canvas.width / 2, 220);
+      // Title (more elegant with Futura)
+      ctx.font = 'bold 48px Futura, Arial, sans-serif';
+      ctx.fillText('Real or AI?', canvas.width / 2, 300);
       
       // Score (larger, more prominent)
-      ctx.font = 'bold 96px Arial';
-      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 320);
+      ctx.font = 'bold 120px Futura, Arial, sans-serif';
+      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 450);
       
       // Accuracy (medium size)
-      ctx.font = '48px Arial';
-      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 380);
+      ctx.font = '60px Futura, Arial, sans-serif';
+      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 520);
       
-      // Feedback (smaller, more readable)
-      ctx.font = 'bold 32px Arial';
-      ctx.fillText(feedback.title.replace(feedback.emoji, '').trim(), canvas.width / 2, 440);
+      // Feedback (more readable)
+      ctx.font = 'bold 40px Futura, Arial, sans-serif';
+      ctx.fillText(feedback.title.replace(feedback.emoji, '').trim(), canvas.width / 2, 600);
       
       // URL (simplified)
-      ctx.font = '20px Arial';
-      ctx.fillText('www.alkemist.no', canvas.width / 2, 520);
+      ctx.font = '24px Futura, Arial, sans-serif';
+      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 700);
 
       // Convert to blob and share
       canvas.toBlob(async (blob) => {
@@ -311,8 +311,8 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      canvas.width = 800;
-      canvas.height = 600;
+      canvas.width = 1024;
+      canvas.height = 1024;
 
       // Get a random AI image
       const aiImages = [
@@ -341,21 +341,21 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Create rounded rectangle path for glassmorphism card
-      const cardX = 50;
-      const cardY = 50;
-      const cardWidth = canvas.width - 100;
-      const cardHeight = canvas.height - 100;
-      const cornerRadius = 30; // Much more corner radius
+      const cardX = 80;
+      const cardY = 80;
+      const cardWidth = canvas.width - 160;
+      const cardHeight = canvas.height - 160;
+      const cornerRadius = 40; // More corner radius for square format
 
-      // Draw rounded rectangle background with strong glass effect
+      // Draw rounded rectangle background with proper glass effect
       ctx.beginPath();
       ctx.roundRect(cardX, cardY, cardWidth, cardHeight, cornerRadius);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
       ctx.fill();
       
       // Add border with glass effect
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.51)';
+      ctx.lineWidth = 1;
       ctx.stroke();
 
       // Load and draw the logo
@@ -369,34 +369,34 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       });
 
       // Draw logo at the top
-      const logoSize = 80;
+      const logoSize = 100;
       const logoX = (canvas.width - logoSize) / 2;
-      const logoY = 100;
+      const logoY = 150;
       ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
 
-      // Add text with improved spacing and font sizes
+      // Add text with improved spacing and font sizes using Futura
       ctx.fillStyle = 'white';
       ctx.textAlign = 'center';
       
-      // Title (smaller, more elegant)
-      ctx.font = 'bold 36px Arial';
-      ctx.fillText('Real or AI?', canvas.width / 2, 220);
+      // Title (more elegant with Futura)
+      ctx.font = 'bold 48px Futura, Arial, sans-serif';
+      ctx.fillText('Real or AI?', canvas.width / 2, 300);
       
       // Score (larger, more prominent)
-      ctx.font = 'bold 96px Arial';
-      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 320);
+      ctx.font = 'bold 120px Futura, Arial, sans-serif';
+      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 450);
       
       // Accuracy (medium size)
-      ctx.font = '48px Arial';
-      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 380);
+      ctx.font = '60px Futura, Arial, sans-serif';
+      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 520);
       
-      // Feedback (smaller, more readable)
-      ctx.font = 'bold 32px Arial';
-      ctx.fillText(feedback?.title.replace(feedback?.emoji, '').trim() || '', canvas.width / 2, 440);
+      // Feedback (more readable)
+      ctx.font = 'bold 40px Futura, Arial, sans-serif';
+      ctx.fillText(feedback?.title.replace(feedback?.emoji, '').trim() || '', canvas.width / 2, 600);
       
       // URL (simplified)
-      ctx.font = '20px Arial';
-      ctx.fillText('www.alkemist.no', canvas.width / 2, 520);
+      ctx.font = '24px Futura, Arial, sans-serif';
+      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 700);
 
       // Convert to data URL for preview and blob for sharing
       const dataUrl = canvas.toDataURL('image/png');
@@ -519,7 +519,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       {/* Footer */}
       <div className="flex justify-center">
         <p className="text-sm text-gray-500">
-          Made with ❤️ by <a href="https://alkemist.no" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-gray-900">Alkemist</a>
+          Made with ❤️ by <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-gray-900">Alkemist</a>
         </p>
       </div>
 
@@ -545,7 +545,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
             </div>
             
             {/* Platform Sharing Icons */}
-            <div className="flex justify-center gap-4 mb-6">
+            <div className="flex justify-center gap-8 mb-6">
               <button
                 onClick={() => shareToPlatform('link')}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
