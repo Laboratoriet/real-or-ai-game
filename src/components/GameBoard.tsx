@@ -7,6 +7,7 @@ import ImageCard from './ImageCard';
 import Feedback from './Feedback';
 import ScoreDisplay from './ScoreDisplay';
 import CategoryFilter from './CategoryFilter';
+import SummaryScreen from './SummaryScreen';
 import Confetti from 'react-confetti';
 import { Image } from '../types'; // Use Image type
 
@@ -47,6 +48,8 @@ const GameBoard: React.FC = () => {
     nextPair, // Still needed for resetting feedback state
     resetGame,
     setCategory,
+    showSummary,
+    hideSummary,
   } = useGameState();
 
   // Desktop view still uses useImagePair
@@ -144,11 +147,23 @@ const GameBoard: React.FC = () => {
 
   const handleCategoryChange = (category: 'all' | 'people' | 'nature' | 'city' | 'interior') => {
     setCategory(category);
+    hideSummary(); // Hide summary when changing category
     
     if (isMobile) {
       initializeMobileGame(category);
     } else {
       generateRandomPair(category);
+    }
+  };
+
+  const handlePlayAgain = () => {
+    hideSummary();
+    resetGame();
+    
+    if (isMobile) {
+      initializeMobileGame();
+    } else {
+      generateRandomPair(state.selectedCategory);
     }
   };
 
@@ -159,8 +174,15 @@ const GameBoard: React.FC = () => {
     if (currentPair) {
       const isCorrect = imageId === currentPair.aiImage.id;
       showFeedback(isCorrect);
+      
+      // Check if we've reached 10 attempts
+      if (state.totalAttempts + 1 >= 10) {
+        setTimeout(() => {
+          showSummary();
+        }, 1000); // Show summary after feedback
+      }
     }
-  }, [state.selectedImageId, state.showFeedback, isMobile, currentPair, selectImage, showFeedback]);
+  }, [state.selectedImageId, state.showFeedback, state.totalAttempts, isMobile, currentPair, selectImage, showFeedback, showSummary]);
 
   // --- Mobile Guessing Logic ---
   const handleMobileGuess = useCallback((guess: 'real' | 'ai') => {
@@ -171,10 +193,17 @@ const GameBoard: React.FC = () => {
     const isCorrect = (guess === 'ai' && currentMobileImage.isAI) || (guess === 'real' && !currentMobileImage.isAI);
     showFeedback(isCorrect);
 
+    // Check if we've reached 10 attempts
+    if (state.totalAttempts + 1 >= 10) {
+      setTimeout(() => {
+        showSummary();
+      }, 1000); // Show summary after feedback
+    }
+
     // Attempt to blur buttons immediately after guess
     realButtonRef.current?.blur();
     aiButtonRef.current?.blur();
-  }, [state.showFeedback, currentMobileImage, isMobile, isAdvancing, showFeedback]);
+  }, [state.showFeedback, currentMobileImage, isMobile, isAdvancing, state.totalAttempts, showFeedback, showSummary]);
 
   // --- Mobile Advancement Logic --- 
   const advanceMobileImage = useCallback(() => {
@@ -558,6 +587,19 @@ const GameBoard: React.FC = () => {
           )}
       </div>
 
+      {/* --- Summary Screen --- */}
+      {state.showSummary && (
+        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center p-4">
+          <SummaryScreen
+            score={state.score}
+            totalAttempts={state.totalAttempts}
+            category={state.selectedCategory}
+            onPlayAgain={handlePlayAgain}
+            onCategoryChange={handleCategoryChange}
+            isMobile={isMobile}
+          />
+        </div>
+      )}
     </div>
   );
 };

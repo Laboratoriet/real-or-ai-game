@@ -23,6 +23,7 @@ export interface GameState {
   showFeedback: boolean;
   correctStreak: number;
   selectedCategory: FilterCategory;
+  showSummary: boolean;
 }
 
 export type GameAction =
@@ -30,4 +31,6 @@ export type GameAction =
   | { type: 'SHOW_FEEDBACK'; payload: boolean }
   | { type: 'NEXT_PAIR' }
   | { type: 'RESET_GAME' }
-  | { type: 'SET_CATEGORY'; payload: FilterCategory };
+  | { type: 'SET_CATEGORY'; payload: FilterCategory }
+  | { type: 'SHOW_SUMMARY' }
+  | { type: 'HIDE_SUMMARY' };
