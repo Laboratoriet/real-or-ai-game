@@ -124,29 +124,29 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       // Draw the background image
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Add much darker overlay for better text readability
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      // Add subtle overlay for better text readability
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Create rounded rectangle path for glassmorphism card
-      const cardX = 80;
-      const cardY = 80;
-      const cardWidth = canvas.width - 160;
-      const cardHeight = canvas.height - 160;
-      const cornerRadius = 40; // More corner radius for square format
+      // Create rounded rectangle path for glassmorphism card with more padding
+      const cardX = 120;
+      const cardY = 120;
+      const cardWidth = canvas.width - 240;
+      const cardHeight = canvas.height - 240;
+      const cornerRadius = 50; // More corner radius
 
       // Draw rounded rectangle background with proper glass effect
       ctx.beginPath();
       ctx.roundRect(cardX, cardY, cardWidth, cardHeight, cornerRadius);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
       ctx.fill();
       
       // Add border with glass effect
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.51)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Load and draw the logo
+      // Load and draw the logo with proper aspect ratio
       const logoImg = new Image();
       logoImg.crossOrigin = 'anonymous';
       
@@ -156,35 +156,35 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
         logoImg.src = '/realorai.svg';
       });
 
-      // Draw logo at the top
-      const logoSize = 100;
+      // Draw logo at the top with proper aspect ratio
+      const logoSize = 80;
       const logoX = (canvas.width - logoSize) / 2;
-      const logoY = 150;
+      const logoY = 200;
       ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
 
-      // Add text with improved spacing and font sizes using Futura
+      // Add text with consistent spacing and font sizes
       ctx.fillStyle = 'white';
       ctx.textAlign = 'center';
       
-      // Title (more elegant with Futura)
-      ctx.font = 'bold 48px Futura, Arial, sans-serif';
-      ctx.fillText('Real or AI?', canvas.width / 2, 300);
+      // Title
+      ctx.font = 'bold 36px Futura, Arial, sans-serif';
+      ctx.fillText('Real or AI?', canvas.width / 2, 320);
       
-      // Score (larger, more prominent)
-      ctx.font = 'bold 120px Futura, Arial, sans-serif';
-      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 450);
+      // Score (most prominent)
+      ctx.font = 'bold 80px Futura, Arial, sans-serif';
+      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 420);
       
-      // Accuracy (medium size)
-      ctx.font = '60px Futura, Arial, sans-serif';
-      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 520);
+      // Accuracy
+      ctx.font = '48px Futura, Arial, sans-serif';
+      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 480);
       
-      // Feedback (more readable)
-      ctx.font = 'bold 40px Futura, Arial, sans-serif';
-      ctx.fillText(feedback.title.replace(feedback.emoji, '').trim(), canvas.width / 2, 600);
+      // Feedback
+      ctx.font = 'bold 32px Futura, Arial, sans-serif';
+      ctx.fillText(feedback.title.replace(feedback.emoji, '').trim(), canvas.width / 2, 540);
       
-      // URL (simplified)
-      ctx.font = '24px Futura, Arial, sans-serif';
-      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 700);
+      // URL
+      ctx.font = '20px Futura, Arial, sans-serif';
+      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 600);
 
       // Convert to blob and share
       canvas.toBlob(async (blob) => {
@@ -250,10 +250,8 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
   };
 
   const handleShare = async () => {
-    // First generate and show the card preview
+    // Just generate and show the card preview
     await generateCardPreview();
-    // Then proceed with sharing
-    await generateShareableCard();
   };
 
   const shareToPlatform = async (platform: string) => {
@@ -336,29 +334,29 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       // Draw the background image
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Add much darker overlay for better text readability
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      // Add subtle overlay for better text readability
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Create rounded rectangle path for glassmorphism card
-      const cardX = 80;
-      const cardY = 80;
-      const cardWidth = canvas.width - 160;
-      const cardHeight = canvas.height - 160;
-      const cornerRadius = 40; // More corner radius for square format
+      // Create rounded rectangle path for glassmorphism card with more padding
+      const cardX = 120;
+      const cardY = 120;
+      const cardWidth = canvas.width - 240;
+      const cardHeight = canvas.height - 240;
+      const cornerRadius = 50; // More corner radius
 
       // Draw rounded rectangle background with proper glass effect
       ctx.beginPath();
       ctx.roundRect(cardX, cardY, cardWidth, cardHeight, cornerRadius);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
       ctx.fill();
       
       // Add border with glass effect
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.51)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Load and draw the logo
+      // Load and draw the logo with proper aspect ratio
       const logoImg = new Image();
       logoImg.crossOrigin = 'anonymous';
       
@@ -368,35 +366,35 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
         logoImg.src = '/realorai.svg';
       });
 
-      // Draw logo at the top
-      const logoSize = 100;
+      // Draw logo at the top with proper aspect ratio
+      const logoSize = 80;
       const logoX = (canvas.width - logoSize) / 2;
-      const logoY = 150;
+      const logoY = 200;
       ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
 
-      // Add text with improved spacing and font sizes using Futura
+      // Add text with consistent spacing and font sizes
       ctx.fillStyle = 'white';
       ctx.textAlign = 'center';
       
-      // Title (more elegant with Futura)
-      ctx.font = 'bold 48px Futura, Arial, sans-serif';
-      ctx.fillText('Real or AI?', canvas.width / 2, 300);
+      // Title
+      ctx.font = 'bold 36px Futura, Arial, sans-serif';
+      ctx.fillText('Real or AI?', canvas.width / 2, 320);
       
-      // Score (larger, more prominent)
-      ctx.font = 'bold 120px Futura, Arial, sans-serif';
-      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 450);
+      // Score (most prominent)
+      ctx.font = 'bold 80px Futura, Arial, sans-serif';
+      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 420);
       
-      // Accuracy (medium size)
-      ctx.font = '60px Futura, Arial, sans-serif';
-      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 520);
+      // Accuracy
+      ctx.font = '48px Futura, Arial, sans-serif';
+      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 480);
       
-      // Feedback (more readable)
-      ctx.font = 'bold 40px Futura, Arial, sans-serif';
-      ctx.fillText(feedback?.title.replace(feedback?.emoji, '').trim() || '', canvas.width / 2, 600);
+      // Feedback
+      ctx.font = 'bold 32px Futura, Arial, sans-serif';
+      ctx.fillText(feedback?.title.replace(feedback?.emoji, '').trim() || '', canvas.width / 2, 540);
       
-      // URL (simplified)
-      ctx.font = '24px Futura, Arial, sans-serif';
-      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 700);
+      // URL
+      ctx.font = '20px Futura, Arial, sans-serif';
+      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 600);
 
       // Convert to data URL for preview and blob for sharing
       const dataUrl = canvas.toDataURL('image/png');
