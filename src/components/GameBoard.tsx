@@ -145,7 +145,7 @@ const GameBoard: React.FC = () => {
     if (state.selectedImageId || state.showFeedback || isMobile) return;
     selectImage(imageId);
     if (currentPair) {
-      const isCorrect = imageId === currentPair.realImage.id;
+      const isCorrect = imageId === currentPair.aiImage.id;
       showFeedback(isCorrect);
     }
   }, [state.selectedImageId, state.showFeedback, isMobile, currentPair, selectImage, showFeedback]);
@@ -153,7 +153,8 @@ const GameBoard: React.FC = () => {
   // --- Mobile Guessing Logic ---
   const handleMobileGuess = useCallback((guess: 'real' | 'ai') => {
     if (state.showFeedback || !currentMobileImage || !isMobile || isAdvancing) return;
-    const isCorrect = (guess === 'real' && !currentMobileImage.isAI) || (guess === 'ai' && currentMobileImage.isAI);
+    // Flipped logic: now we're asking which image is AI, so guess 'ai' is correct if image is AI
+    const isCorrect = guess === 'ai' && currentMobileImage.isAI;
     showFeedback(isCorrect);
 
     // Attempt to blur buttons immediately after guess
@@ -409,7 +410,7 @@ const GameBoard: React.FC = () => {
               <img src="/realorai.svg" alt="Real or AI Logo" className="h-8 w-auto" /> {/* Reduced height */} 
             </a>
             <p className="text-gray-600 text-center sm:text-base lg:text-lg mb-2">
-              Click on the image you think is <strong>real</strong>.
+              Click on the image you think is <strong>AI-generated</strong>.
             </p>
           </>
         )}
@@ -479,7 +480,7 @@ const GameBoard: React.FC = () => {
             <div className="flex-shrink-0 w-full">
               {currentMobileImage && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.5 }} className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-1">
-                  <motion.button ref={realButtonRef} key={`real-button-${buttonResetKey}`} onClick={() => handleMobileGuess('real')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? (currentMobileImage.isAI ? 0.3 : 1) : 1 }} transition={{ duration: 0.2 }}
+                  <motion.button ref={realButtonRef} key={`real-button-${buttonResetKey}`} onClick={() => handleMobileGuess('real')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? 0.3 : 1 }} transition={{ duration: 0.2 }}
                     className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'md:hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">📷</span> Real
                   </motion.button>
