@@ -1,4 +1,5 @@
 export type Category = 'people' | 'nature' | 'city' | 'interior';
+export type FilterCategory = Category | 'all';
 
 export interface Image {
   id: string;
@@ -21,10 +22,12 @@ export interface GameState {
   isCorrect: boolean | null;
   showFeedback: boolean;
   correctStreak: number;
+  selectedCategory: FilterCategory;
 }
 
 export type GameAction =
   | { type: 'SELECT_IMAGE'; payload: string }
   | { type: 'SHOW_FEEDBACK'; payload: boolean }
   | { type: 'NEXT_PAIR' }
-  | { type: 'RESET_GAME' };
+  | { type: 'RESET_GAME' }
+  | { type: 'SET_CATEGORY'; payload: FilterCategory };

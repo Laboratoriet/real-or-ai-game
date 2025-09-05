@@ -1,5 +1,5 @@
 import { useReducer } from 'react';
-import { GameState, GameAction } from '../types';
+import { GameState, GameAction, FilterCategory } from '../types';
 
 const initialState: Omit<GameState, 'currentCategory'> = {
   score: 0,
@@ -8,6 +8,7 @@ const initialState: Omit<GameState, 'currentCategory'> = {
   isCorrect: null,
   showFeedback: false,
   correctStreak: 0,
+  selectedCategory: 'all',
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -41,6 +42,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...initialState,
         correctStreak: 0,
       } as GameState;
+    case 'SET_CATEGORY':
+      return {
+        ...state,
+        selectedCategory: action.payload,
+      };
     default:
       return state;
   }
@@ -65,11 +71,16 @@ export const useGameState = () => {
     dispatch({ type: 'RESET_GAME' });
   };
 
+  const setCategory = (category: FilterCategory) => {
+    dispatch({ type: 'SET_CATEGORY', payload: category });
+  };
+
   return {
     state,
     selectImage,
     showFeedback,
     nextPair,
     resetGame,
+    setCategory,
   };
 };

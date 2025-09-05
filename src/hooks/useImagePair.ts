@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ImagePair, Image, Category } from '../types';
-import { getCategoryImages, availableCategories } from '../data/images';
+import { ImagePair, Image, Category, FilterCategory } from '../types';
+import { getCategoryImages, availableCategories, getAllUniqueImages } from '../data/images';
 
 const RECENT_HISTORY_LENGTH = 50; // Keep history length
 
@@ -14,7 +14,7 @@ export const useImagePair = () => {
   const recentlyUsedIds = useRef<string[]>([]);
 
   // --- Wrap generateRandomPair in useCallback ---
-  const generateRandomPair = useCallback(() => {
+  const generateRandomPair = useCallback((filterCategory: FilterCategory = 'all') => {
     setLoading(true);
     setError(null);
     
@@ -28,22 +28,27 @@ export const useImagePair = () => {
       return;
     }
     
-    // --- Select a category, biasing towards 'people' ---
+    // --- Select a category based on filter ---
     let chosenCategory: Category;
-    const peopleWeight = 3; // How many extra times to weigh 'people'
     
-    // Depends on availableCategories
-    if (availableCategories.includes('people') && availableCategories.length > 1) {
-      const weightedList = availableCategories.reduce((acc, category) => {
-        const weight = (category === 'people') ? peopleWeight : 1;
-        for (let i = 0; i < weight; i++) {
-          acc.push(category);
-        }
-        return acc;
-      }, [] as Category[]);
-      chosenCategory = weightedList[Math.floor(Math.random() * weightedList.length)];
+    if (filterCategory === 'all') {
+      // Original logic: bias towards 'people' when showing all categories
+      const peopleWeight = 3;
+      if (availableCategories.includes('people') && availableCategories.length > 1) {
+        const weightedList = availableCategories.reduce((acc, category) => {
+          const weight = (category === 'people') ? peopleWeight : 1;
+          for (let i = 0; i < weight; i++) {
+            acc.push(category);
+          }
+          return acc;
+        }, [] as Category[]);
+        chosenCategory = weightedList[Math.floor(Math.random() * weightedList.length)];
+      } else {
+        chosenCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
+      }
     } else {
-      chosenCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
+      // Use the selected filter category
+      chosenCategory = filterCategory;
     }
     
     console.log('[Category Choice] Chosen:', chosenCategory);

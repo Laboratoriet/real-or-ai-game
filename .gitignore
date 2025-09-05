@@ -28,3 +28,4 @@ package-lock.json
 
 # Temp image dir
 public/mobile-images/
+.vercel

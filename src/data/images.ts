@@ -139,3 +139,42 @@ export const getAllUniqueImages = (): Image[] => {
   console.log(`[getAllUniqueImages] Found ${allImages.length} unique images across all categories.`);
   return shuffleArray(allImages);
 };
+
+/**
+ * Gets images filtered by category
+ * @param filterCategory - The category to filter by, or 'all' for all categories
+ * @returns A shuffled array of unique Image objects from the specified category
+ */
+export const getFilteredImages = (filterCategory: 'all' | Category): Image[] => {
+  if (filterCategory === 'all') {
+    return getAllUniqueImages();
+  }
+
+  const entry = categoryImageCache[filterCategory];
+  if (!entry) {
+    console.warn(`[getFilteredImages] No images found for category: ${filterCategory}`);
+    return [];
+  }
+
+  const filteredImages: Image[] = [];
+  const seenIds = new Set<string>();
+
+  // Add real images
+  entry.real.forEach(image => {
+    if (!seenIds.has(image.id)) {
+      filteredImages.push(image);
+      seenIds.add(image.id);
+    }
+  });
+
+  // Add AI images
+  entry.ai.forEach(image => {
+    if (!seenIds.has(image.id)) {
+      filteredImages.push(image);
+      seenIds.add(image.id);
+    }
+  });
+
+  console.log(`[getFilteredImages] Found ${filteredImages.length} unique images for category: ${filterCategory}`);
+  return shuffleArray(filteredImages);
+};

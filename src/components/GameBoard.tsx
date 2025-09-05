@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useImagePair } from '../hooks/useImagePair';
 import { useGameState } from '../hooks/useGameState';
-import { getAllUniqueImages } from '../data/images'; // Import the new function
+import { getFilteredImages } from '../data/images'; // Import the new function
 import ImageCard from './ImageCard';
 import Feedback from './Feedback';
 import ScoreDisplay from './ScoreDisplay';
+import CategoryFilter from './CategoryFilter';
 import Confetti from 'react-confetti';
 import { Image } from '../types'; // Use Image type
 
@@ -45,6 +46,7 @@ const GameBoard: React.FC = () => {
     showFeedback,
     nextPair, // Still needed for resetting feedback state
     resetGame,
+    setCategory,
   } = useGameState();
 
   // Desktop view still uses useImagePair
@@ -87,18 +89,18 @@ const GameBoard: React.FC = () => {
   const aiButtonRef = useRef<HTMLButtonElement>(null);
 
   // --- Initialization and Reset Logic ---
-  const initializeMobileGame = useCallback(() => {
+  const initializeMobileGame = useCallback((filterCategory = state.selectedCategory) => {
     setMobileLoading(true);
     setMobileError(null);
     try {
-      const allImages = getAllUniqueImages();
-      if (allImages.length === 0) {
-        setMobileError('No images available for the game.');
+      const filteredImages = getFilteredImages(filterCategory);
+      if (filteredImages.length === 0) {
+        setMobileError('No images available for the selected category.');
         setMasterMobileList([]);
         setCurrentMobileImage(null);
       } else {
-        setMasterMobileList(allImages);
-        setCurrentMobileImage(allImages[0]); // Set the first image
+        setMasterMobileList(filteredImages);
+        setCurrentMobileImage(filteredImages[0]); // Set the first image
         setMasterMobileIndex(0);
         setUniqueImagesShownCount(0);
       }
@@ -106,7 +108,7 @@ const GameBoard: React.FC = () => {
         setMobileError('Failed to load images.');
     }
     setMobileLoading(false);
-  }, []);
+  }, [state.selectedCategory]);
 
   // Initialize on mount if mobile
   useEffect(() => {
@@ -115,7 +117,7 @@ const GameBoard: React.FC = () => {
     } else {
        // If starting on desktop, generate initial pair ONLY if not already loaded
        if (!currentPair) {
-         generateRandomPair();
+         generateRandomPair(state.selectedCategory);
        }
     }
     // Cleanup ref on unmount
@@ -125,7 +127,7 @@ const GameBoard: React.FC = () => {
     }
     // dependencies: Run when isMobile changes, or on initial mount for the correct mode logic.
     // initializeMobileGame and generateRandomPair are stable callbacks.
-  }, [isMobile, initializeMobileGame, generateRandomPair, currentPair]);
+  }, [isMobile, initializeMobileGame, generateRandomPair, currentPair, state.selectedCategory]);
 
   const handleResetGame = () => {
     resetGame(); // Reset score, streak etc.
@@ -136,7 +138,17 @@ const GameBoard: React.FC = () => {
     if (isMobile) {
       initializeMobileGame(); // Re-initialize mobile state
     } else {
-      generateRandomPair(); // Fetch new pair for desktop
+      generateRandomPair(state.selectedCategory); // Fetch new pair for desktop
+    }
+  };
+
+  const handleCategoryChange = (category: 'all' | 'people' | 'nature' | 'city' | 'interior') => {
+    setCategory(category);
+    
+    if (isMobile) {
+      initializeMobileGame(category);
+    } else {
+      generateRandomPair(category);
     }
   };
 
@@ -238,13 +250,13 @@ const GameBoard: React.FC = () => {
         } else {
           // Desktop: Reset feedback and fetch next pair
           nextPair(); 
-          generateRandomPair();
+          generateRandomPair(state.selectedCategory);
         }
       }, 750);
     }
 
     return clearExistingTimer;
-  }, [state.showFeedback, isMobile, advanceMobileImage, nextPair, generateRandomPair]);
+  }, [state.showFeedback, isMobile, advanceMobileImage, nextPair, generateRandomPair, state.selectedCategory]);
 
   // --- Confetti Effect (Keep) ---
    useEffect(() => {
@@ -399,19 +411,31 @@ const GameBoard: React.FC = () => {
       {/* --- Header Section (Refactored) --- */}
       <div className="mb-6 pt-2 flex flex-col items-center"> 
         {isMobile ? (
-          // --- Mobile Header: Just the linked Logo ---
-          <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-4">
-            <img src="/realorai.svg" alt="Real or AI Logo" className="h-6 w-auto" /> {/* Reduced height */} 
-          </a>
+          // --- Mobile Header: Logo + Category Filter ---
+          <>
+            <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-4">
+              <img src="/realorai.svg" alt="Real or AI Logo" className="h-6 w-auto" /> {/* Reduced height */} 
+            </a>
+            <CategoryFilter 
+              selectedCategory={state.selectedCategory}
+              onCategoryChange={handleCategoryChange}
+              isMobile={true}
+            />
+          </>
         ) : (
-          // --- Desktop Header: Logo + Instruction Text ---
+          // --- Desktop Header: Logo + Instruction Text + Category Filter ---
           <>
             <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-6">
               <img src="/realorai.svg" alt="Real or AI Logo" className="h-8 w-auto" /> {/* Reduced height */} 
             </a>
-            <p className="text-gray-600 text-center sm:text-base lg:text-lg mb-2">
+            <p className="text-gray-600 text-center sm:text-base lg:text-lg mb-4">
               Click on the image you think is <strong>AI-generated</strong>.
             </p>
+            <CategoryFilter 
+              selectedCategory={state.selectedCategory}
+              onCategoryChange={handleCategoryChange}
+              isMobile={false}
+            />
           </>
         )}
       </div>
@@ -524,7 +548,7 @@ const GameBoard: React.FC = () => {
       {/* ... Desktop Feedback Button ... */}
       <div className={`w-full flex justify-center ${isMobile ? 'flex-shrink-0' : ''}`}>
           { !isMobile && state.showFeedback && (
-            <div className="mt-2"><Feedback isCorrect={state.isCorrect} onNext={() => { nextPair(); generateRandomPair(); }} /></div>
+            <div className="mt-2"><Feedback isCorrect={state.isCorrect} onNext={() => { nextPair(); generateRandomPair(state.selectedCategory); }} /></div>
           )}
       </div>
     </div>
