@@ -102,104 +102,34 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       canvas.width = 1024;
       canvas.height = 1024;
 
-      // Get a random AI image
-      const aiImages = [
-        '/images/people/ai/1.jpg', '/images/people/ai/2.jpg', '/images/people/ai/3.jpg',
-        '/images/nature/ai/1.jpg', '/images/nature/ai/2.jpg', '/images/nature/ai/3.jpg',
-        '/images/city/ai/1.jpg', '/images/city/ai/2.jpg', '/images/city/ai/3.jpg',
-        '/images/interior/ai/1.jpg', '/images/interior/ai/2.jpg', '/images/interior/ai/3.jpg'
-      ];
-      const randomImage = aiImages[Math.floor(Math.random() * aiImages.length)];
+      // Get a random pre-made gradient card
+      const gradientCards = ['/gradientcards/1.jpg', '/gradientcards/2.jpg', '/gradientcards/3.jpg'];
+      const randomCard = gradientCards[Math.floor(Math.random() * gradientCards.length)];
 
-      // Load the background image
+      // Load the pre-made gradient card
       const img = new Image();
       img.crossOrigin = 'anonymous';
       
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = reject;
-        img.src = randomImage;
+        img.src = randomCard;
       });
 
-      // Draw the background image with proper cropping (not stretching)
-      const imgAspectRatio = img.width / img.height;
-      const canvasAspectRatio = canvas.width / canvas.height;
-      
-      let sourceX = 0, sourceY = 0, sourceWidth = img.width, sourceHeight = img.height;
-      
-      if (imgAspectRatio > canvasAspectRatio) {
-        // Image is wider than canvas - crop width
-        sourceWidth = img.height * canvasAspectRatio;
-        sourceX = (img.width - sourceWidth) / 2;
-      } else {
-        // Image is taller than canvas - crop height
-        sourceHeight = img.width / canvasAspectRatio;
-        sourceY = (img.height - sourceHeight) / 2;
-      }
-      
-      ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+      // Draw the pre-made gradient card (it's already 1024x1024)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Add very subtle overlay for better text readability
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Create rounded rectangle path for glassmorphism card with more padding
-      const cardX = 120;
-      const cardY = 120;
-      const cardWidth = canvas.width - 240;
-      const cardHeight = canvas.height - 240;
-      const cornerRadius = 16; // Match the CSS generator
-
-      // Draw rounded rectangle background with exact glassmorphism settings
-      ctx.beginPath();
-      ctx.roundRect(cardX, cardY, cardWidth, cardHeight, cornerRadius);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.38)'; // Exact from CSS generator
-      ctx.fill();
-      
-      // Add border with exact glassmorphism settings
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.51)'; // Exact from CSS generator
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      // Load and draw the logo with proper aspect ratio
-      const logoImg = new Image();
-      logoImg.crossOrigin = 'anonymous';
-      
-      await new Promise((resolve, reject) => {
-        logoImg.onload = resolve;
-        logoImg.onerror = reject;
-        logoImg.src = '/realorai.svg';
-      });
-
-      // Draw logo at the top with proper aspect ratio
-      const logoSize = 80;
-      const logoX = (canvas.width - logoSize) / 2;
-      const logoY = 200;
-      ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
-
-      // Add text with consistent spacing and font sizes
-      ctx.fillStyle = 'white';
+      // Add only the score and accuracy text in the same positions as the example
+      ctx.fillStyle = '#2C2C2C'; // Dark gray color from the example
       ctx.textAlign = 'center';
       
-      // Title
-      ctx.font = 'bold 36px Futura, Arial, sans-serif';
-      ctx.fillText('Real or AI?', canvas.width / 2, 320);
-      
-      // Score (most prominent)
-      ctx.font = 'bold 80px Futura, Arial, sans-serif';
+      // Score (most prominent, same position as "8/10" in example)
+      ctx.font = 'bold 80px Arial, sans-serif';
       ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 420);
       
-      // Accuracy
-      ctx.font = '48px Futura, Arial, sans-serif';
+      // Accuracy (same position as "78% Accuracy" in example)
+      ctx.font = '48px Arial, sans-serif';
       ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 480);
-      
-      // Feedback
-      ctx.font = 'bold 32px Futura, Arial, sans-serif';
-      ctx.fillText(feedback.title.replace(feedback.emoji, '').trim(), canvas.width / 2, 540);
-      
-      // URL
-      ctx.font = '20px Futura, Arial, sans-serif';
-      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 600);
 
       // Convert to blob and share
       canvas.toBlob(async (blob) => {
@@ -327,104 +257,34 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       canvas.width = 1024;
       canvas.height = 1024;
 
-      // Get a random AI image
-      const aiImages = [
-        '/images/people/ai/1.jpg', '/images/people/ai/2.jpg', '/images/people/ai/3.jpg',
-        '/images/nature/ai/1.jpg', '/images/nature/ai/2.jpg', '/images/nature/ai/3.jpg',
-        '/images/city/ai/1.jpg', '/images/city/ai/2.jpg', '/images/city/ai/3.jpg',
-        '/images/interior/ai/1.jpg', '/images/interior/ai/2.jpg', '/images/interior/ai/3.jpg'
-      ];
-      const randomImage = aiImages[Math.floor(Math.random() * aiImages.length)];
+      // Get a random pre-made gradient card
+      const gradientCards = ['/gradientcards/1.jpg', '/gradientcards/2.jpg', '/gradientcards/3.jpg'];
+      const randomCard = gradientCards[Math.floor(Math.random() * gradientCards.length)];
 
-      // Load the background image
+      // Load the pre-made gradient card
       const img = new Image();
       img.crossOrigin = 'anonymous';
       
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = reject;
-        img.src = randomImage;
+        img.src = randomCard;
       });
 
-      // Draw the background image with proper cropping (not stretching)
-      const imgAspectRatio = img.width / img.height;
-      const canvasAspectRatio = canvas.width / canvas.height;
-      
-      let sourceX = 0, sourceY = 0, sourceWidth = img.width, sourceHeight = img.height;
-      
-      if (imgAspectRatio > canvasAspectRatio) {
-        // Image is wider than canvas - crop width
-        sourceWidth = img.height * canvasAspectRatio;
-        sourceX = (img.width - sourceWidth) / 2;
-      } else {
-        // Image is taller than canvas - crop height
-        sourceHeight = img.width / canvasAspectRatio;
-        sourceY = (img.height - sourceHeight) / 2;
-      }
-      
-      ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+      // Draw the pre-made gradient card (it's already 1024x1024)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Add very subtle overlay for better text readability
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Create rounded rectangle path for glassmorphism card with more padding
-      const cardX = 120;
-      const cardY = 120;
-      const cardWidth = canvas.width - 240;
-      const cardHeight = canvas.height - 240;
-      const cornerRadius = 16; // Match the CSS generator
-
-      // Draw rounded rectangle background with exact glassmorphism settings
-      ctx.beginPath();
-      ctx.roundRect(cardX, cardY, cardWidth, cardHeight, cornerRadius);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.38)'; // Exact from CSS generator
-      ctx.fill();
-      
-      // Add border with exact glassmorphism settings
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.51)'; // Exact from CSS generator
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      // Load and draw the logo with proper aspect ratio
-      const logoImg = new Image();
-      logoImg.crossOrigin = 'anonymous';
-      
-      await new Promise((resolve, reject) => {
-        logoImg.onload = resolve;
-        logoImg.onerror = reject;
-        logoImg.src = '/realorai.svg';
-      });
-
-      // Draw logo at the top with proper aspect ratio
-      const logoSize = 80;
-      const logoX = (canvas.width - logoSize) / 2;
-      const logoY = 200;
-      ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
-
-      // Add text with consistent spacing and font sizes
-      ctx.fillStyle = 'white';
+      // Add only the score and accuracy text in the same positions as the example
+      ctx.fillStyle = '#2C2C2C'; // Dark gray color from the example
       ctx.textAlign = 'center';
       
-      // Title
-      ctx.font = 'bold 36px Futura, Arial, sans-serif';
-      ctx.fillText('Real or AI?', canvas.width / 2, 320);
-      
-      // Score (most prominent)
-      ctx.font = 'bold 80px Futura, Arial, sans-serif';
+      // Score (most prominent, same position as "8/10" in example)
+      ctx.font = 'bold 80px Arial, sans-serif';
       ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 420);
       
-      // Accuracy
-      ctx.font = '48px Futura, Arial, sans-serif';
+      // Accuracy (same position as "78% Accuracy" in example)
+      ctx.font = '48px Arial, sans-serif';
       ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 480);
-      
-      // Feedback
-      ctx.font = 'bold 32px Futura, Arial, sans-serif';
-      ctx.fillText(feedback?.title.replace(feedback?.emoji, '').trim() || '', canvas.width / 2, 540);
-      
-      // URL
-      ctx.font = '20px Futura, Arial, sans-serif';
-      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 600);
 
       // Convert to data URL for preview and blob for sharing
       const dataUrl = canvas.toDataURL('image/png');
