@@ -85,9 +85,90 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
     }
   };
 
-  const handleShare = async () => {
+  const generateShareableCard = async () => {
+    // Create a canvas element for the shareable card
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas size
+    canvas.width = 800;
+    canvas.height = 600;
+
+    // Create gradient background
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(1, '#764ba2');
+    
+    // Fill background
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Add glassmorphism card background
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.fillRect(50, 50, canvas.width - 100, canvas.height - 100);
+    
+    // Add border
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(50, 50, canvas.width - 100, canvas.height - 100);
+
+    // Add text
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    
+    // Title
+    ctx.font = 'bold 48px Arial';
+    ctx.fillText('Real or AI?', canvas.width / 2, 150);
+    
+    // Score
+    ctx.font = 'bold 72px Arial';
+    ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 250);
+    
+    // Accuracy
+    ctx.font = '36px Arial';
+    ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 300);
+    
+    // Feedback
+    ctx.font = '24px Arial';
+    ctx.fillText(feedback.title.replace(feedback.emoji, '').trim(), canvas.width / 2, 350);
+    
+    // Challenge text
+    ctx.font = '20px Arial';
+    ctx.fillText('Can you beat my score?', canvas.width / 2, 400);
+    
+    // URL
+    ctx.font = '16px Arial';
+    ctx.fillText('alkemist.no/realorai', canvas.width / 2, 500);
+
+    // Convert to blob and share
+    canvas.toBlob(async (blob) => {
+      if (blob) {
+        const file = new File([blob], 'real-or-ai-score.png', { type: 'image/png' });
+        
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: 'My Real or AI Score!',
+              text: `I scored ${score}/${totalAttempts} (${accuracy}%) on Real or AI? Can you beat my score? 🎯`,
+              files: [file],
+            });
+          } catch (err) {
+            console.log('Error sharing image:', err);
+            // Fallback to text sharing
+            fallbackShare();
+          }
+        } else {
+          // Fallback to text sharing
+          fallbackShare();
+        }
+      }
+    }, 'image/png');
+  };
+
+  const fallbackShare = async () => {
     const shareText = `I just scored ${score}/${totalAttempts} (${accuracy}%) on Real or AI? Can you beat my score? 🎯`;
-    const shareUrl = window.location.href;
+    const shareUrl = window.location.origin;
 
     if (navigator.share) {
       try {
@@ -108,6 +189,10 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
         console.log('Error copying to clipboard:', err);
       }
     }
+  };
+
+  const handleShare = async () => {
+    await generateShareableCard();
   };
 
   const categories: FilterCategory[] = ['all', 'people', 'nature', 'city', 'interior'];
@@ -142,13 +227,13 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       {/* Score Display */}
       <div className="mb-8">
         <div className="text-6xl mb-4">{feedback.emoji}</div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{feedback.title.replace(feedback.emoji, '').trim()}</h1>
         <div className="text-4xl font-bold text-gray-900 mb-2">
           {score}/{totalAttempts}
         </div>
-        <div className="text-xl text-gray-600">
+        <div className="text-xl text-gray-600 mb-4">
           {accuracy}% Accuracy
         </div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{feedback.title.replace(feedback.emoji, '').trim()}</h1>
       </div>
 
       {/* Feedback Message */}
