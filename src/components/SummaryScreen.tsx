@@ -125,22 +125,22 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
   if (!feedback) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className="w-full max-w-2xl mx-auto text-center"
-    >
+    <div className="w-full h-full flex flex-col">
+      {/* Logo */}
+      <div className="flex justify-center mb-8">
+        <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer">
+          <img src="/realorai.svg" alt="Real or AI Logo" className="h-8 w-auto" />
+        </a>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-2xl mx-auto text-center flex-grow flex flex-col justify-center"
+      >
       {/* Score Display */}
       <div className="mb-8">
-        <motion.div
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-          className="text-6xl mb-4"
-        >
-          {feedback.emoji}
-        </motion.div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">{feedback.title}</h1>
         <div className="text-4xl font-bold text-gray-900 mb-2">
           {score}/{totalAttempts}
@@ -211,7 +211,14 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
           Share Score
         </button>
       </motion.div>
-    </motion.div>
+
+      {/* Footer */}
+      <div className="flex justify-center mt-8">
+        <p className="text-sm text-gray-500">
+          Made with ❤️ by <a href="https://alkemist.no" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-gray-900">Alkemist</a>
+        </p>
+      </div>
+    </div>
   );
 };
 
