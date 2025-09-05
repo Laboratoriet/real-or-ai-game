@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FilterCategory } from '../types';
 
 interface CategoryFilterProps {
@@ -8,12 +8,12 @@ interface CategoryFilterProps {
   isMobile?: boolean;
 }
 
-const categoryLabels: Record<FilterCategory, { label: string; emoji: string }> = {
-  all: { label: 'All', emoji: '🎯' },
-  people: { label: 'People', emoji: '👥' },
-  nature: { label: 'Nature', emoji: '🌿' },
-  city: { label: 'City', emoji: '🏙️' },
-  interior: { label: 'Interior', emoji: '🏠' },
+const categoryLabels: Record<FilterCategory, string> = {
+  all: 'All',
+  people: 'People',
+  nature: 'Nature',
+  city: 'City',
+  interior: 'Interior',
 };
 
 const CategoryFilter: React.FC<CategoryFilterProps> = ({
@@ -22,65 +22,93 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   isMobile = false,
 }) => {
   const categories: FilterCategory[] = ['all', 'people', 'nature', 'city', 'interior'];
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   if (isMobile) {
     return (
-      <div className="w-full max-w-md mx-auto px-4 mb-4">
-        <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
-          {categories.map((category) => {
-            const isSelected = selectedCategory === category;
-            return (
-              <motion.button
-                key={category}
-                onClick={() => onCategoryChange(category)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  isSelected
-                    ? 'bg-gray-900 text-white shadow-md'
-                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-                }`}
-                whileTap={{ scale: 0.95 }}
-                initial={false}
-                animate={{
-                  scale: isSelected ? 1.02 : 1,
-                }}
-                transition={{ duration: 0.2 }}
+      <div className="w-full max-w-xs mx-auto mb-3">
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="w-full px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 flex items-center justify-between"
+          >
+            <span className="font-medium">{categoryLabels[selectedCategory]}</span>
+            <svg
+              className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          <AnimatePresence>
+            {isDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10"
               >
-                <span className="mr-2">{categoryLabels[category].emoji}</span>
-                {categoryLabels[category].label}
-              </motion.button>
-            );
-          })}
+                {categories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => {
+                      onCategoryChange(category);
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 first:rounded-t-md last:rounded-b-md ${
+                      selectedCategory === category ? 'font-bold text-gray-900' : 'text-gray-700'
+                    }`}
+                  >
+                    {categoryLabels[category]}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto mb-6">
-      <div className="flex flex-wrap justify-center gap-3">
+    <div className="w-full max-w-lg mx-auto mb-4">
+      <div className="flex justify-center gap-6">
         {categories.map((category) => {
           const isSelected = selectedCategory === category;
           return (
-            <motion.button
+            <button
               key={category}
               onClick={() => onCategoryChange(category)}
-              className={`px-6 py-3 rounded-full text-base font-medium transition-all duration-200 ${
+              className={`text-sm transition-all duration-200 hover:text-gray-900 ${
                 isSelected
-                  ? 'bg-gray-900 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                  ? 'font-bold text-gray-900 underline decoration-2 underline-offset-2'
+                  : 'text-gray-500'
               }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              initial={false}
-              animate={{
-                scale: isSelected ? 1.05 : 1,
-                boxShadow: isSelected ? '0 10px 25px -5px rgba(0, 0, 0, 0.1)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-              }}
-              transition={{ duration: 0.2 }}
             >
-              <span className="mr-2">{categoryLabels[category].emoji}</span>
-              {categoryLabels[category].label}
-            </motion.button>
+              {categoryLabels[category]}
+            </button>
           );
         })}
       </div>
