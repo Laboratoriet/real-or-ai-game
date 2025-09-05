@@ -409,12 +409,19 @@ const GameBoard: React.FC = () => {
       {showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={400} style={{ zIndex: 9999 }} gravity={0.15} />}
 
       {/* --- Header Section (Refactored) --- */}
-      <div className="mb-6 pt-2 flex flex-col items-center"> 
+      <div className="mb-4 pt-2 flex flex-col items-center"> 
         {isMobile ? (
-          // --- Mobile Header: Just the Logo ---
-          <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-4">
-            <img src="/realorai.svg" alt="Real or AI Logo" className="h-6 w-auto" /> {/* Reduced height */} 
-          </a>
+          // --- Mobile Header: Logo + Category Filter ---
+          <>
+            <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="mb-4">
+              <img src="/realorai.svg" alt="Real or AI Logo" className="h-6 w-auto" /> {/* Reduced height */} 
+            </a>
+            <CategoryFilter 
+              selectedCategory={state.selectedCategory}
+              onCategoryChange={handleCategoryChange}
+              isMobile={true}
+            />
+          </>
         ) : (
           // --- Desktop Header: Logo + Instruction Text + Category Filter ---
           <>
@@ -546,16 +553,6 @@ const GameBoard: React.FC = () => {
           )}
       </div>
 
-      {/* --- Mobile Category Filter (Bottom) --- */}
-      {isMobile && (
-        <div className="w-full flex justify-center mt-4 mb-2">
-          <CategoryFilter 
-            selectedCategory={state.selectedCategory}
-            onCategoryChange={handleCategoryChange}
-            isMobile={true}
-          />
-        </div>
-      )}
     </div>
   );
 };

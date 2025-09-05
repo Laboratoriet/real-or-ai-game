@@ -44,7 +44,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
 
   if (isMobile) {
     return (
-      <div className="w-full max-w-xs mx-auto mb-6">
+      <div className="w-full max-w-xs mx-auto mb-4">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
