@@ -124,18 +124,27 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       // Draw the background image
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Add dark overlay for better text readability
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      // Add much darker overlay for better text readability
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Add glassmorphism card background
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.fillRect(50, 50, canvas.width - 100, canvas.height - 100);
+      // Create rounded rectangle path for glassmorphism card
+      const cardX = 50;
+      const cardY = 50;
+      const cardWidth = canvas.width - 100;
+      const cardHeight = canvas.height - 100;
+      const cornerRadius = 30; // Much more corner radius
+
+      // Draw rounded rectangle background with strong glass effect
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardWidth, cardHeight, cornerRadius);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fill();
       
-      // Add border
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      // Add border with glass effect
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 2;
-      ctx.strokeRect(50, 50, canvas.width - 100, canvas.height - 100);
+      ctx.stroke();
 
       // Load and draw the logo
       const logoImg = new Image();
@@ -148,38 +157,34 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       });
 
       // Draw logo at the top
-      const logoSize = 60;
+      const logoSize = 80;
       const logoX = (canvas.width - logoSize) / 2;
-      const logoY = 80;
+      const logoY = 100;
       ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
 
-      // Add text with improved font sizes
+      // Add text with improved spacing and font sizes
       ctx.fillStyle = 'white';
       ctx.textAlign = 'center';
       
       // Title (smaller, more elegant)
-      ctx.font = 'bold 32px Arial';
-      ctx.fillText('Real or AI?', canvas.width / 2, 180);
+      ctx.font = 'bold 36px Arial';
+      ctx.fillText('Real or AI?', canvas.width / 2, 220);
       
       // Score (larger, more prominent)
-      ctx.font = 'bold 84px Arial';
-      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 280);
+      ctx.font = 'bold 96px Arial';
+      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 320);
       
       // Accuracy (medium size)
-      ctx.font = '42px Arial';
-      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 330);
+      ctx.font = '48px Arial';
+      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 380);
       
       // Feedback (smaller, more readable)
-      ctx.font = 'bold 28px Arial';
-      ctx.fillText(feedback.title.replace(feedback.emoji, '').trim(), canvas.width / 2, 380);
+      ctx.font = 'bold 32px Arial';
+      ctx.fillText(feedback.title.replace(feedback.emoji, '').trim(), canvas.width / 2, 440);
       
-      // Challenge text (smaller)
-      ctx.font = '22px Arial';
-      ctx.fillText('Can you beat my score?', canvas.width / 2, 420);
-      
-      // URL (smaller)
-      ctx.font = '18px Arial';
-      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 480);
+      // URL (simplified)
+      ctx.font = '20px Arial';
+      ctx.fillText('www.alkemist.no', canvas.width / 2, 520);
 
       // Convert to blob and share
       canvas.toBlob(async (blob) => {
@@ -331,18 +336,27 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       // Draw the background image
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Add dark overlay for better text readability
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      // Add much darker overlay for better text readability
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Add glassmorphism card background
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.fillRect(50, 50, canvas.width - 100, canvas.height - 100);
+      // Create rounded rectangle path for glassmorphism card
+      const cardX = 50;
+      const cardY = 50;
+      const cardWidth = canvas.width - 100;
+      const cardHeight = canvas.height - 100;
+      const cornerRadius = 30; // Much more corner radius
+
+      // Draw rounded rectangle background with strong glass effect
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardWidth, cardHeight, cornerRadius);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fill();
       
-      // Add border
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      // Add border with glass effect
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 2;
-      ctx.strokeRect(50, 50, canvas.width - 100, canvas.height - 100);
+      ctx.stroke();
 
       // Load and draw the logo
       const logoImg = new Image();
@@ -355,38 +369,34 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       });
 
       // Draw logo at the top
-      const logoSize = 60;
+      const logoSize = 80;
       const logoX = (canvas.width - logoSize) / 2;
-      const logoY = 80;
+      const logoY = 100;
       ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
 
-      // Add text with improved font sizes
+      // Add text with improved spacing and font sizes
       ctx.fillStyle = 'white';
       ctx.textAlign = 'center';
       
       // Title (smaller, more elegant)
-      ctx.font = 'bold 32px Arial';
-      ctx.fillText('Real or AI?', canvas.width / 2, 180);
+      ctx.font = 'bold 36px Arial';
+      ctx.fillText('Real or AI?', canvas.width / 2, 220);
       
       // Score (larger, more prominent)
-      ctx.font = 'bold 84px Arial';
-      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 280);
+      ctx.font = 'bold 96px Arial';
+      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, 320);
       
       // Accuracy (medium size)
-      ctx.font = '42px Arial';
-      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 330);
+      ctx.font = '48px Arial';
+      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, 380);
       
       // Feedback (smaller, more readable)
-      ctx.font = 'bold 28px Arial';
-      ctx.fillText(feedback?.title.replace(feedback?.emoji, '').trim() || '', canvas.width / 2, 380);
+      ctx.font = 'bold 32px Arial';
+      ctx.fillText(feedback?.title.replace(feedback?.emoji, '').trim() || '', canvas.width / 2, 440);
       
-      // Challenge text (smaller)
-      ctx.font = '22px Arial';
-      ctx.fillText('Can you beat my score?', canvas.width / 2, 420);
-      
-      // URL (smaller)
-      ctx.font = '18px Arial';
-      ctx.fillText('alkemist.no/realorai', canvas.width / 2, 480);
+      // URL (simplified)
+      ctx.font = '20px Arial';
+      ctx.fillText('www.alkemist.no', canvas.width / 2, 520);
 
       // Convert to data URL for preview and blob for sharing
       const dataUrl = canvas.toDataURL('image/png');
@@ -517,8 +527,8 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       {showCardPreview && cardImageUrl && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-900">🎉 Your Epic Score Card!</h3>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Share</h3>
               <button
                 onClick={() => setShowCardPreview(false)}
                 className="text-gray-500 hover:text-gray-700 text-xl"
@@ -533,70 +543,67 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                 className="w-full rounded-lg shadow-lg"
               />
             </div>
-            <p className="text-sm text-gray-600 mb-6 text-center">
-              Look at this beauty! 🎨 Share your AI detection skills with the world!
-            </p>
             
             {/* Platform Sharing Icons */}
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="flex justify-center gap-4 mb-6">
               <button
                 onClick={() => shareToPlatform('link')}
-                className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Copy Link"
               >
-                <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
-                <span className="text-xs text-gray-600">Link</span>
               </button>
               
               <button
                 onClick={() => shareToPlatform('twitter')}
-                className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Share on X"
               >
-                <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                 </svg>
-                <span className="text-xs text-gray-600">X</span>
               </button>
               
               <button
                 onClick={() => shareToPlatform('pinterest')}
-                className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Share on Pinterest"
               >
-                <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.746-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001.012.001z"/>
                 </svg>
-                <span className="text-xs text-gray-600">Pinterest</span>
               </button>
               
               <button
                 onClick={() => shareToPlatform('facebook')}
-                className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Share on Facebook"
               >
-                <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
-                <span className="text-xs text-gray-600">Facebook</span>
               </button>
               
               <button
                 onClick={() => shareToPlatform('linkedin')}
-                className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Share on LinkedIn"
               >
-                <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                 </svg>
-                <span className="text-xs text-gray-600">LinkedIn</span>
               </button>
               
               <button
                 onClick={() => shareToPlatform('download')}
-                className="flex flex-col items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Download Image"
               >
-                <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <span className="text-xs text-gray-600">Download</span>
               </button>
             </div>
             
