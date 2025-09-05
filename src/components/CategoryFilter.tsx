@@ -74,11 +74,11 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
           <AnimatePresence>
             {isDropdownOpen && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
+                exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.15 }}
-                className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-gray-200 rounded-md shadow-lg z-50"
+                className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50"
               >
                 {categories.map((category) => (
                   <button
