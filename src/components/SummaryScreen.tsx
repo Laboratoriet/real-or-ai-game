@@ -50,6 +50,23 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
     generateFeedback();
   }, [accuracy, category]);
 
+  // Disable keyboard navigation on summary screen
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Disable arrow keys and space/enter to prevent accidental navigation
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'Enter'].includes(event.key)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown, true);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, []);
+
   const getStaticFeedback = (accuracy: number, category: FilterCategory): DynamicFeedback => {
     if (accuracy >= 90) {
       return {
@@ -273,7 +290,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                   {/* Tip */}
                   <div className="mb-6">
                     <p className="text-white/80 text-sm max-w-lg drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
-                      💡 Try switching to a different category to test your skills across various image types.
+                      💡 Try another category
                     </p>
                   </div>
 
@@ -302,9 +319,9 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }} 
               className={`rounded-3xl border border-white/15 bg-slate-900/70 backdrop-blur-3xl shadow-[0_30px_120px_-25px_rgba(0,0,0,0.65)] absolute inset-0 ${flipped ? "" : "pointer-events-none"}`}
             >
-              <div className="p-8 md:p-10 flex flex-col items-center text-center gap-6 h-full justify-between">
-                <div className="flex flex-col items-center gap-6">
-                  <img src="/realorai-white.svg" alt="Real or AI" className="h-8 opacity-90" />
+              <div className="p-8 md:p-10 flex flex-col items-center text-center gap-8 h-full justify-between">
+                <div className="flex flex-col items-center gap-8">
+                  <img src="/realorai-white.svg" alt="Real or AI" className="h-10 opacity-90" />
 
                   <div className="relative">
                     <div
@@ -323,11 +340,11 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                     <div className="absolute inset-0 blur-2xl rounded-full bg-indigo-400/20 -z-10" />
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="text-white/90 text-lg md:text-xl font-medium">Can you beat my score?</div>
+                  <div className="space-y-6">
+                    <div className="text-white/90 text-2xl md:text-3xl font-semibold">Can you beat my score?</div>
                     <div className="text-white/60 text-sm">
                       <div>Test your skills, play the game at</div>
-                      <div className="font-medium">www.aikemist.no</div>
+                      <div className="font-medium mt-2">www.aikemist.no</div>
                     </div>
                   </div>
                 </div>
