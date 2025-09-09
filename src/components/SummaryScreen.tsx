@@ -318,41 +318,39 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                   <div className="absolute inset-0 blur-2xl rounded-full bg-indigo-400/20 -z-10" />
                 </div>
 
-                <div className="space-y-3">
-                  <div className="text-white/90 text-lg">Can you beat my score?</div>
-                  <div className="text-white/60 text-sm">Play at {window.location.origin.replace("https://", "")} </div>
-                </div>
-
-                <div className="flex flex-wrap justify-center gap-3">
-                  <button 
-                    onClick={handleWebShare} 
-                    className="rounded-xl px-5 py-6 text-base border border-white/25 bg-transparent text-white hover:bg-white/10"
-                  >
-                    <Share2 className="w-4 h-4 mr-2 inline"/> Share link
-                  </button>
-                  <button 
-                    onClick={downloadShareImage} 
-                    className="rounded-xl px-5 py-6 text-base bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white"
-                  >
-                    <Download className="w-4 h-4 mr-2 inline"/> Download image
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-1 text-white/50 text-xs">
-                  <LinkIcon className="w-3 h-3"/>
-                  <span>{window.location.origin}</span>
+                <div className="space-y-4">
+                  <div className="text-white/90 text-xl md:text-2xl font-medium">Can you beat my score?</div>
+                  <div className="text-white/60 text-sm">Test your skills at www.aikemist.no</div>
                 </div>
               </div>
             </div>
           </motion.div>
         </div>
 
+        {/* Share buttons - only show when flipped */}
+        {flipped && (
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <button 
+              onClick={handleWebShare} 
+              className="rounded-xl px-5 py-6 text-base border border-white/25 bg-transparent text-white hover:bg-white/10"
+            >
+              <Share2 className="w-4 h-4 mr-2 inline"/> Share link
+            </button>
+            <button 
+              onClick={downloadShareImage} 
+              className="rounded-xl px-5 py-6 text-base bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white"
+            >
+              <Download className="w-4 h-4 mr-2 inline"/> Download image
+            </button>
+          </div>
+        )}
+
         {/* Back button - only show when flipped */}
         {flipped && (
-          <div className="mt-6 flex justify-center">
+          <div className="mt-4 flex justify-center">
             <button 
               onClick={() => setFlipped(false)} 
-              className="rounded-xl px-6 py-3 text-base text-white/80 hover:text-white hover:bg-white/10 bg-transparent border border-white/20"
+              className="rounded-xl px-6 py-3 text-base text-white/80 hover:text-white hover:bg-white/10 bg-transparent"
             >
               <ArrowLeft className="w-4 h-4 mr-2 inline"/> Back to results
             </button>
