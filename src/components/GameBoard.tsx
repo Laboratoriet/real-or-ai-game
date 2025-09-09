@@ -67,6 +67,11 @@ const GameBoard: React.FC = () => {
   const { width, height } = useWindowSize();
   const isMobile = width < MOBILE_BREAKPOINT;
 
+  // Debug: Monitor selectedCategory changes
+  useEffect(() => {
+    console.log('selectedCategory state changed to:', state.selectedCategory);
+  }, [state.selectedCategory]);
+
   // --- Mobile State --- 
   const [masterMobileList, setMasterMobileList] = useState<Image[]>([]);
   const [currentMobileImage, setCurrentMobileImage] = useState<Image | null>(null);
@@ -147,7 +152,9 @@ const GameBoard: React.FC = () => {
 
   const handleCategoryChange = (category: 'all' | 'people' | 'nature' | 'city' | 'interior') => {
     console.log('handleCategoryChange called with:', category);
+    console.log('Current state.selectedCategory before change:', state.selectedCategory);
     setCategory(category);
+    console.log('setCategory called, new category should be:', category);
     resetGame(); // Reset score and game state when changing category
     hideSummary(); // Hide summary when changing category
     
