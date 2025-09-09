@@ -146,13 +146,16 @@ const GameBoard: React.FC = () => {
   };
 
   const handleCategoryChange = (category: 'all' | 'people' | 'nature' | 'city' | 'interior') => {
+    console.log('handleCategoryChange called with:', category);
     setCategory(category);
     resetGame(); // Reset score and game state when changing category
     hideSummary(); // Hide summary when changing category
     
     if (isMobile) {
+      console.log('Initializing mobile game with category:', category);
       initializeMobileGame(category);
     } else {
+      console.log('Generating random pair with category:', category);
       generateRandomPair(category);
     }
   };
