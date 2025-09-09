@@ -314,7 +314,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                     <div className="absolute inset-0 blur-2xl rounded-full bg-indigo-400/20 -z-10" />
                   </div>
 
-                  <div className="space-y-10 w-full max-w-sm">
+                  <div className="space-y-10 w-full max-w-xs px-4">
                     <div className="text-white/90 text-xl md:text-2xl font-medium">Can you beat my score?</div>
                     <div className="text-white/60 text-sm text-center">
                       <div>Test your skills, play the game at</div>
@@ -378,7 +378,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
           <>
             <div className="mt-6 flex flex-col items-center">
               <p className="text-white/80 text-sm drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] mb-4">
-                💡
+                Try another category
               </p>
               <div className="flex flex-wrap justify-center gap-2">
               {otherCategories.slice(0, 3).map((cat) => (
