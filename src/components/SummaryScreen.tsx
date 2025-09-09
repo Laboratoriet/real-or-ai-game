@@ -181,6 +181,8 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
 
   const categories: FilterCategory[] = ['all', 'people', 'nature', 'city', 'interior'];
   const otherCategories = categories.filter(cat => cat !== category);
+  console.log('Current category:', category);
+  console.log('Other categories:', otherCategories);
 
   if (loading) {
     return (
@@ -384,7 +386,10 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
               {otherCategories.slice(0, 3).map((cat) => (
                 <button
                   key={cat}
-                  onClick={() => onCategoryChange(cat)}
+                  onClick={() => {
+                    console.log('Category button clicked:', cat);
+                    onCategoryChange(cat);
+                  }}
                   className="px-4 py-2 rounded-full text-sm font-medium text-gray-200 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md"
                 >
                   <span className="mr-1">
