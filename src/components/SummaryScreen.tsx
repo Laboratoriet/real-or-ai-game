@@ -268,9 +268,13 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                     >
                       <Share2 className="w-4 h-4 mr-2 inline"/> Share score
                     </button>
-                    <button className="rounded-xl px-5 py-6 text-base md:text-lg text-white/80 hover:text-white hover:bg-white/10 bg-transparent">
-                      <History className="w-4 h-4 mr-2 inline"/> Review mistakes
-                    </button>
+                  </div>
+
+                  {/* Tip */}
+                  <div className="mb-6">
+                    <p className="text-white/80 text-sm max-w-lg drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
+                      💡 Try switching to a different category to test your skills across various image types.
+                    </p>
                   </div>
 
                   {/* Category chips */}
@@ -298,29 +302,38 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }} 
               className={`rounded-3xl border border-white/15 bg-slate-900/70 backdrop-blur-3xl shadow-[0_30px_120px_-25px_rgba(0,0,0,0.65)] absolute inset-0 ${flipped ? "" : "pointer-events-none"}`}
             >
-              <div className="p-8 md:p-10 flex flex-col items-center text-center gap-8">
-                <img src="/realorai-white.svg" alt="Real or AI" className="h-7 opacity-90" />
+              <div className="p-8 md:p-10 flex flex-col items-center text-center gap-6 h-full justify-between">
+                <div className="flex flex-col items-center gap-6">
+                  <img src="/realorai-white.svg" alt="Real or AI" className="h-8 opacity-90" />
 
-                <div className="relative">
-                  <div
-                    className="w-44 h-44 md:w-56 md:h-56 rounded-full grid place-items-center"
-                    style={{
-                      background: `conic-gradient(#6366f1 ${accuracy * 3.6}deg, rgba(255,255,255,0.12) 0deg)`
-                    }}
-                  >
-                    <div className="w-[85%] h-[85%] rounded-full bg-slate-900/80 backdrop-blur-xl ring-1 ring-white/20 grid place-items-center">
-                      <div className="flex flex-col items-center">
-                        <div className="text-5xl font-extrabold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{score}/{totalAttempts}</div>
-                        <div className="text-sm text-white/80 mt-1">{accuracy}% accuracy</div>
+                  <div className="relative">
+                    <div
+                      className="w-40 h-40 md:w-48 md:h-48 rounded-full grid place-items-center"
+                      style={{
+                        background: `conic-gradient(#6366f1 ${accuracy * 3.6}deg, rgba(255,255,255,0.12) 0deg)`
+                      }}
+                    >
+                      <div className="w-[85%] h-[85%] rounded-full bg-slate-900/80 backdrop-blur-xl ring-1 ring-white/20 grid place-items-center">
+                        <div className="flex flex-col items-center">
+                          <div className="text-4xl font-extrabold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{score}/{totalAttempts}</div>
+                          <div className="text-sm text-white/80 mt-1">{accuracy}% accuracy</div>
+                        </div>
                       </div>
                     </div>
+                    <div className="absolute inset-0 blur-2xl rounded-full bg-indigo-400/20 -z-10" />
                   </div>
-                  <div className="absolute inset-0 blur-2xl rounded-full bg-indigo-400/20 -z-10" />
+
+                  <div className="space-y-3">
+                    <div className="text-white/90 text-lg md:text-xl font-medium">Can you beat my score?</div>
+                    <div className="text-white/60 text-sm">
+                      <div>Test your skills, play the game at</div>
+                      <div className="font-medium">www.aikemist.no</div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="text-white/90 text-xl md:text-2xl font-medium">Can you beat my score?</div>
-                  <div className="text-white/60 text-sm">Test your skills at www.aikemist.no</div>
+                <div className="text-white/50 text-xs">
+                  Made with ❤️ by Alkemist
                 </div>
               </div>
             </div>
