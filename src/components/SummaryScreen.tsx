@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FilterCategory } from '../types';
-import { Share2, RefreshCw, Leaf, History, Download, Link as LinkIcon, ArrowLeft } from 'lucide-react';
+import { Share2, RefreshCw, Target, History, Download, Link as LinkIcon, ArrowLeft } from 'lucide-react';
 import domtoimage from 'dom-to-image-more';
 
 interface SummaryScreenProps {
@@ -114,6 +114,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
     tempContainer.style.width = node.offsetWidth + 'px';
     tempContainer.style.height = node.offsetHeight + 'px';
     tempContainer.style.background = '#0b1021';
+    tempContainer.style.borderRadius = '24px';
     
     // Clone the card content without the rotation transform
     const clonedCard = node.cloneNode(true) as HTMLElement;
@@ -121,6 +122,15 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
     clonedCard.style.position = 'relative';
     clonedCard.style.width = '100%';
     clonedCard.style.height = '100%';
+    clonedCard.style.border = 'none'; // Remove border
+    clonedCard.style.boxShadow = 'none'; // Remove shadow
+    
+    // Remove borders from all child elements
+    const allElements = clonedCard.querySelectorAll('*');
+    allElements.forEach((el: any) => {
+      el.style.border = 'none';
+      el.style.outline = 'none';
+    });
     
     tempContainer.appendChild(clonedCard);
     document.body.appendChild(tempContainer);
@@ -130,7 +140,10 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
         quality: 1, 
         bgcolor: "#0b1021",
         width: node.offsetWidth,
-        height: node.offsetHeight
+        height: node.offsetHeight,
+        style: {
+          borderRadius: '24px'
+        }
       });
       const a = document.createElement("a");
       a.href = dataUrl;
@@ -227,7 +240,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                         <div className="flex flex-col items-center">
                           <div className="text-4xl font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{score}/{totalAttempts}</div>
                           <div className="flex items-center gap-1 text-sm text-white/80 mt-1">
-                            <Leaf className="w-4 h-4"/>
+                            <Target className="w-4 h-4"/>
                             <span>{accuracy}% accuracy</span>
                           </div>
                         </div>
