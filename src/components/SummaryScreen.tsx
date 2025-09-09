@@ -105,11 +105,40 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
   const downloadShareImage = async () => {
     const node = document.getElementById("share-card");
     if (!node) return;
-    const dataUrl = await domtoimage.toPng(node, { quality: 1, bgcolor: "#0b1021" });
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = `realorai_${score}-${totalAttempts}.png`;
-    a.click();
+    
+    // Create a temporary container to capture the card without the 180deg rotation
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '-9999px';
+    tempContainer.style.width = node.offsetWidth + 'px';
+    tempContainer.style.height = node.offsetHeight + 'px';
+    tempContainer.style.background = '#0b1021';
+    
+    // Clone the card content without the rotation transform
+    const clonedCard = node.cloneNode(true) as HTMLElement;
+    clonedCard.style.transform = 'none'; // Remove the 180deg rotation
+    clonedCard.style.position = 'relative';
+    clonedCard.style.width = '100%';
+    clonedCard.style.height = '100%';
+    
+    tempContainer.appendChild(clonedCard);
+    document.body.appendChild(tempContainer);
+    
+    try {
+      const dataUrl = await domtoimage.toPng(tempContainer, { 
+        quality: 1, 
+        bgcolor: "#0b1021",
+        width: node.offsetWidth,
+        height: node.offsetHeight
+      });
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `realorai_${score}-${totalAttempts}.png`;
+      a.click();
+    } finally {
+      document.body.removeChild(tempContainer);
+    }
   };
 
 
@@ -167,10 +196,12 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
 
       {/* Center column */}
       <div className="w-full max-w-xl">
-        {/* Brand logo */}
-        <div className="flex items-center justify-center mb-6">
-          <img src="/realorai.svg" alt="Real or AI" className="h-8 md:h-9 opacity-90" />
-        </div>
+        {/* Brand logo - only show when not flipped */}
+        {!flipped && (
+          <div className="flex items-center justify-center mb-6">
+            <img src="/realorai-white.svg" alt="Real or AI" className="h-8 md:h-9 opacity-90" />
+          </div>
+        )}
 
         {/* Flip container */}
         <div style={{ perspective: "1600px" }} className="relative">
@@ -254,8 +285,8 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }} 
               className={`rounded-3xl border border-white/15 bg-slate-900/70 backdrop-blur-3xl shadow-[0_30px_120px_-25px_rgba(0,0,0,0.65)] absolute inset-0 ${flipped ? "" : "pointer-events-none"}`}
             >
-              <div className="p-8 md:p-10 flex flex-col items-center text-center gap-5">
-                <img src="/realorai.svg" alt="Real or AI" className="h-7 opacity-90" />
+              <div className="p-8 md:p-10 flex flex-col items-center text-center gap-8">
+                <img src="/realorai-white.svg" alt="Real or AI" className="h-7 opacity-90" />
 
                 <div className="relative">
                   <div
@@ -274,10 +305,12 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                   <div className="absolute inset-0 blur-2xl rounded-full bg-indigo-400/20 -z-10" />
                 </div>
 
-                <div className="text-white/90 text-lg">Can you beat my score?</div>
-                <div className="text-white/60 text-sm">Play at {window.location.origin.replace("https://", "")} </div>
+                <div className="space-y-3">
+                  <div className="text-white/90 text-lg">Can you beat my score?</div>
+                  <div className="text-white/60 text-sm">Play at {window.location.origin.replace("https://", "")} </div>
+                </div>
 
-                <div className="flex flex-wrap justify-center gap-3 pt-2">
+                <div className="flex flex-wrap justify-center gap-3">
                   <button 
                     onClick={handleWebShare} 
                     className="rounded-xl px-5 py-6 text-base border border-white/25 bg-transparent text-white hover:bg-white/10"
@@ -290,12 +323,6 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                   >
                     <Download className="w-4 h-4 mr-2 inline"/> Download image
                   </button>
-                  <button 
-                    onClick={() => setFlipped(false)} 
-                    className="rounded-xl px-5 py-6 text-base text-white/80 hover:text-white hover:bg-white/10 bg-transparent"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2 inline"/> Back
-                  </button>
                 </div>
 
                 <div className="flex items-center gap-1 text-white/50 text-xs">
@@ -306,6 +333,18 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
             </div>
           </motion.div>
         </div>
+
+        {/* Back button - only show when flipped */}
+        {flipped && (
+          <div className="mt-6 flex justify-center">
+            <button 
+              onClick={() => setFlipped(false)} 
+              className="rounded-xl px-6 py-3 text-base text-white/80 hover:text-white hover:bg-white/10 bg-transparent border border-white/20"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2 inline"/> Back to results
+            </button>
+          </div>
+        )}
 
         <div className="mt-8 text-gray-400 text-sm text-center">
           Made with ❤️ by <a href="https://alkemist.no" className="underline decoration-white/30 hover:decoration-white">Alkemist</a>
