@@ -123,26 +123,28 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
     const node = document.getElementById("share-card");
     if (!node) return;
     
-    // Create a 1024x1024 container with background
-    const tempContainer = document.createElement('div');
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.left = '-9999px';
-    tempContainer.style.top = '-9999px';
-    tempContainer.style.width = '1024px';
-    tempContainer.style.height = '1024px';
-    tempContainer.style.background = '#0b1021';
-    tempContainer.style.display = 'flex';
-    tempContainer.style.alignItems = 'center';
-    tempContainer.style.justifyContent = 'center';
+         // Create a 1024x1024 container with background
+         const tempContainer = document.createElement('div');
+         tempContainer.style.position = 'absolute';
+         tempContainer.style.left = '-9999px';
+         tempContainer.style.top = '-9999px';
+         tempContainer.style.width = '1024px';
+         tempContainer.style.height = '1024px';
+         tempContainer.style.background = '#0b1021';
+         tempContainer.style.display = 'flex';
+         tempContainer.style.alignItems = 'center';
+         tempContainer.style.justifyContent = 'center';
+         tempContainer.style.padding = '80px';
     
-    // Clone the card content without the rotation transform
-    const clonedCard = node.cloneNode(true) as HTMLElement;
-    clonedCard.style.transform = 'none'; // Remove the 180deg rotation
-    clonedCard.style.position = 'relative';
-    clonedCard.style.width = 'auto';
-    clonedCard.style.height = 'auto';
-    clonedCard.style.border = 'none'; // Remove border
-    clonedCard.style.boxShadow = 'none'; // Remove shadow
+         // Clone the card content without the rotation transform
+         const clonedCard = node.cloneNode(true) as HTMLElement;
+         clonedCard.style.transform = 'none'; // Remove the 180deg rotation
+         clonedCard.style.position = 'relative';
+         clonedCard.style.width = '100%';
+         clonedCard.style.height = '100%';
+         clonedCard.style.border = 'none'; // Remove border
+         clonedCard.style.boxShadow = 'none'; // Remove shadow
+         clonedCard.style.maxWidth = '864px'; // Make card bigger in container
     
     // Remove borders from all child elements
     const allElements = clonedCard.querySelectorAll('*');
@@ -231,10 +233,10 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
 
       {/* Center column */}
       <div className="w-full max-w-xl">
-        {/* Brand logo - only show when not flipped */}
+        {/* Brand logo - only show when not flipped, match main game positioning */}
         {!flipped && (
-          <div className="flex items-center justify-center mb-6">
-            <img src="/realorai-white.svg" alt="Real or AI" className="h-8 md:h-9 opacity-90" />
+          <div className="flex items-center justify-center mb-4 md:mb-6">
+            <img src="/realorai-white.svg" alt="Real or AI" className="h-6 md:h-8 w-auto opacity-90" />
           </div>
         )}
 
@@ -314,9 +316,9 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
 
                   <div className="space-y-10">
                     <div className="text-white/90 text-xl md:text-2xl font-medium">Can you beat my score?</div>
-                    <div className="text-white/60 text-sm">
+                    <div className="text-white/60 text-sm text-center">
                       <div>Test your skills, play the game at</div>
-                      <div className="font-medium mt-4 text-base">www.aikemist.no</div>
+                      <div className="font-medium mt-4 text-base break-all">www.aikemist.no</div>
                     </div>
                   </div>
                 </div>
@@ -409,7 +411,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
           </div>
         )}
 
-        <div className="mt-8 text-gray-400 text-sm text-center">
+        <div className="mt-auto pt-8 text-gray-400 text-sm text-center">
           Made with ❤️ by <a href="https://alkemist.no" className="underline decoration-white/30 hover:decoration-white">Alkemist</a>
         </div>
       </div>
