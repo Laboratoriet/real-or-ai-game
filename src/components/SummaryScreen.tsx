@@ -288,7 +288,11 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
               <div className="p-6 md:p-8 flex flex-col items-center text-center gap-12 h-full justify-between">
                 <div className="flex flex-col items-center gap-12">
                   <div className="pt-4">
-                    <img src="/realorai-white.svg" alt="Real or AI" className="h-7 opacity-90" />
+                    <img 
+                      src="/realorai-white.svg" 
+                      alt="Real or AI" 
+                      className="h-7 opacity-90" 
+                    />
                   </div>
 
                   <div className="relative">
