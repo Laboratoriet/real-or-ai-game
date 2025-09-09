@@ -123,22 +123,24 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
     const node = document.getElementById("share-card");
     if (!node) return;
     
-    // Create a temporary container to capture the card without the 180deg rotation
+    // Create a 1024x1024 container with background
     const tempContainer = document.createElement('div');
     tempContainer.style.position = 'absolute';
     tempContainer.style.left = '-9999px';
     tempContainer.style.top = '-9999px';
-    tempContainer.style.width = node.offsetWidth + 'px';
-    tempContainer.style.height = node.offsetHeight + 'px';
+    tempContainer.style.width = '1024px';
+    tempContainer.style.height = '1024px';
     tempContainer.style.background = '#0b1021';
-    tempContainer.style.borderRadius = '24px';
+    tempContainer.style.display = 'flex';
+    tempContainer.style.alignItems = 'center';
+    tempContainer.style.justifyContent = 'center';
     
     // Clone the card content without the rotation transform
     const clonedCard = node.cloneNode(true) as HTMLElement;
     clonedCard.style.transform = 'none'; // Remove the 180deg rotation
     clonedCard.style.position = 'relative';
-    clonedCard.style.width = '100%';
-    clonedCard.style.height = '100%';
+    clonedCard.style.width = 'auto';
+    clonedCard.style.height = 'auto';
     clonedCard.style.border = 'none'; // Remove border
     clonedCard.style.boxShadow = 'none'; // Remove shadow
     
@@ -149,6 +151,12 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       el.style.outline = 'none';
     });
     
+    // Ensure footer is on one line
+    const footerElement = clonedCard.querySelector('.text-white\\/50');
+    if (footerElement) {
+      (footerElement as HTMLElement).style.whiteSpace = 'nowrap';
+    }
+    
     tempContainer.appendChild(clonedCard);
     document.body.appendChild(tempContainer);
     
@@ -156,11 +164,8 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       const dataUrl = await domtoimage.toPng(tempContainer, { 
         quality: 1, 
         bgcolor: "#0b1021",
-        width: node.offsetWidth,
-        height: node.offsetHeight,
-        style: {
-          borderRadius: '24px'
-        }
+        width: 1024,
+        height: 1024
       });
       const a = document.createElement("a");
       a.href = dataUrl;
@@ -270,45 +275,6 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                   <p className="text-white/80 text-sm max-w-lg mb-8 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
                     💡 {feedback.tip}
                   </p>
-
-                  {/* CTAs */}
-                  <div className="flex flex-wrap justify-center gap-3 mb-6">
-                    <button
-                      onClick={onPlayAgain}
-                      className="rounded-xl px-5 py-6 text-base md:text-lg font-medium shadow-lg shadow-indigo-600/30 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2 inline"/> Play again
-                    </button>
-                    <button 
-                      onClick={() => setFlipped(true)} 
-                      className="rounded-xl px-5 py-6 text-base md:text-lg border border-white/25 bg-transparent text-white hover:bg-white/10"
-                    >
-                      <Share2 className="w-4 h-4 mr-2 inline"/> Share score
-                    </button>
-                  </div>
-
-                  {/* Tip */}
-                  <div className="mb-6">
-                    <p className="text-white/80 text-sm max-w-lg drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
-                      💡 Try another category
-                    </p>
-                  </div>
-
-                  {/* Category chips */}
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {otherCategories.slice(0, 3).map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => onCategoryChange(cat)}
-                        className="px-4 py-2 rounded-full text-sm font-medium text-gray-200 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md"
-                      >
-                        <span className="mr-1">
-                          {cat === 'nature' ? '🌿' : cat === 'city' ? '🏙️' : cat === 'people' ? '👥' : cat === 'interior' ? '🏠' : '✨'}
-                        </span>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
             </div>
@@ -319,20 +285,22 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
               style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }} 
               className={`rounded-3xl border border-white/15 bg-slate-900/70 backdrop-blur-3xl shadow-[0_30px_120px_-25px_rgba(0,0,0,0.65)] absolute inset-0 ${flipped ? "" : "pointer-events-none"}`}
             >
-              <div className="p-6 md:p-8 flex flex-col items-center text-center gap-10 h-full justify-between">
-                <div className="flex flex-col items-center gap-10">
-                  <img src="/realorai-white.svg" alt="Real or AI" className="h-7 opacity-90" />
+              <div className="p-6 md:p-8 flex flex-col items-center text-center gap-12 h-full justify-between">
+                <div className="flex flex-col items-center gap-12">
+                  <div className="pt-4">
+                    <img src="/realorai-white.svg" alt="Real or AI" className="h-7 opacity-90" />
+                  </div>
 
                   <div className="relative">
                     <div
-                      className="w-36 h-36 md:w-40 md:h-40 rounded-full grid place-items-center"
+                      className="w-44 h-44 md:w-48 md:h-48 rounded-full grid place-items-center"
                       style={{
                         background: `conic-gradient(#6366f1 ${accuracy * 3.6}deg, rgba(255,255,255,0.12) 0deg)`
                       }}
                     >
                       <div className="w-[85%] h-[85%] rounded-full bg-slate-900/80 backdrop-blur-xl ring-1 ring-white/20 grid place-items-center">
                         <div className="flex flex-col items-center">
-                          <div className="text-3xl font-extrabold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{score}/{totalAttempts}</div>
+                          <div className="text-4xl font-extrabold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{score}/{totalAttempts}</div>
                           <div className="text-sm text-white/80 mt-1">{accuracy}% accuracy</div>
                         </div>
                       </div>
@@ -340,11 +308,11 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                     <div className="absolute inset-0 blur-2xl rounded-full bg-indigo-400/20 -z-10" />
                   </div>
 
-                  <div className="space-y-8">
+                  <div className="space-y-10">
                     <div className="text-white/90 text-xl md:text-2xl font-medium">Can you beat my score?</div>
                     <div className="text-white/60 text-sm">
                       <div>Test your skills, play the game at</div>
-                      <div className="font-medium mt-3">www.aikemist.no</div>
+                      <div className="font-medium mt-4 text-base">www.aikemist.no</div>
                     </div>
                   </div>
                 </div>
@@ -356,6 +324,24 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
             </div>
           </motion.div>
         </div>
+
+        {/* Action buttons - only show when not flipped */}
+        {!flipped && (
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <button
+              onClick={onPlayAgain}
+              className="rounded-xl px-5 py-6 text-base md:text-lg font-medium shadow-lg shadow-indigo-600/30 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white"
+            >
+              <RefreshCw className="w-4 h-4 mr-2 inline"/> Play again
+            </button>
+            <button 
+              onClick={() => setFlipped(true)} 
+              className="rounded-xl px-5 py-6 text-base md:text-lg border border-white/25 bg-transparent text-white hover:bg-white/10"
+            >
+              <Share2 className="w-4 h-4 mr-2 inline"/> Share score
+            </button>
+          </div>
+        )}
 
         {/* Share buttons - only show when flipped */}
         {flipped && (
@@ -372,7 +358,39 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
             >
               <Download className="w-4 h-4 mr-2 inline"/> Download image
             </button>
+            <button
+              onClick={onPlayAgain}
+              className="rounded-xl px-5 py-6 text-base font-medium shadow-lg shadow-indigo-600/30 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white"
+            >
+              <RefreshCw className="w-4 h-4 mr-2 inline"/> Play again
+            </button>
           </div>
+        )}
+
+        {/* Tip and categories - only show when not flipped */}
+        {!flipped && (
+          <>
+            <div className="mt-6">
+              <p className="text-white/80 text-sm max-w-lg drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] text-center">
+                💡 Try another category
+              </p>
+            </div>
+
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {otherCategories.slice(0, 3).map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => onCategoryChange(cat)}
+                  className="px-4 py-2 rounded-full text-sm font-medium text-gray-200 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md"
+                >
+                  <span className="mr-1">
+                    {cat === 'nature' ? '🌿' : cat === 'city' ? '🏙️' : cat === 'people' ? '👥' : cat === 'interior' ? '🏠' : '✨'}
+                  </span>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </button>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Back button - only show when flipped */}
