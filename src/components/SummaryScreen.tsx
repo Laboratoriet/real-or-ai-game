@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { FilterCategory } from '../types';
+import { Share2, RefreshCw, Leaf, History, Download, Link as LinkIcon, ArrowLeft } from 'lucide-react';
+import domtoimage from 'dom-to-image-more';
 
 interface SummaryScreenProps {
   score: number;
@@ -28,9 +30,8 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
 }) => {
   const [feedback, setFeedback] = useState<DynamicFeedback | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showCardPreview, setShowCardPreview] = useState(false);
-  const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
-  const [generatedCardBlob, setGeneratedCardBlob] = useState<Blob | null>(null);
+  const [flipped, setFlipped] = useState(false);
+  const prefersReduced = useReducedMotion();
 
   const accuracy = totalAttempts > 0 ? Math.round((score / totalAttempts) * 100) : 0;
 
@@ -88,217 +89,29 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
     }
   };
 
-  const generateShareableCard = async () => {
-    try {
-      // Create a canvas element for the shareable card
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        fallbackShare();
-        return;
-      }
-
-      // Set canvas size to square format
-      canvas.width = 1024;
-      canvas.height = 1024;
-
-      // Get a random pre-made gradient card
-      const gradientCards = ['/gradientcards/1.jpg', '/gradientcards/2.jpg', '/gradientcards/3.jpg'];
-      const randomCard = gradientCards[Math.floor(Math.random() * gradientCards.length)];
-
-      // Load the pre-made gradient card
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = randomCard;
-      });
-
-      // Draw the pre-made gradient card (it's already 1024x1024)
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      // Add only the score and accuracy text centered in the square
-      ctx.fillStyle = '#2C2C2C'; // Dark gray color from the example
-      ctx.textAlign = 'center';
-      
-      // Score (most prominent, centered in the square)
-      ctx.font = 'bold 100px Arial, sans-serif';
-      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, canvas.height / 2 - 40);
-      
-      // Accuracy (centered below score)
-      ctx.font = '56px Arial, sans-serif';
-      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, canvas.height / 2 + 40);
-
-      // Convert to blob and share
-      canvas.toBlob(async (blob) => {
-        if (blob) {
-          const file = new File([blob], 'real-or-ai-score.png', { type: 'image/png' });
-          
-          // Check if we can share files (mobile)
-          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-              await navigator.share({
-                title: 'My Real or AI Score!',
-                text: `I scored ${score}/${totalAttempts} (${accuracy}%) on Real or AI? Can you beat my score? 🎯`,
-                files: [file],
-              });
-              return;
-            } catch (err) {
-              console.log('Error sharing image:', err);
-            }
-          }
-          
-          // For desktop, just download the image
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'real-or-ai-score.png';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        } else {
-          fallbackShare();
-        }
-      }, 'image/png');
-    } catch (error) {
-      console.log('Error generating shareable card:', error);
-      fallbackShare();
-    }
-  };
-
-  const fallbackShare = async () => {
-    const shareText = `I just scored ${score}/${totalAttempts} (${accuracy}%) on Real or AI? Can you beat my score? 🎯`;
+  const handleWebShare = async () => {
+    const text = `I scored ${score}/${totalAttempts} (${accuracy}%) in Real or AI?`; 
     const shareUrl = window.location.origin;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Real or AI? Game',
-          text: shareText,
-          url: shareUrl,
-        });
-      } catch (err) {
-        console.log('Error sharing:', err);
-      }
-    } else {
-      // Fallback to copying to clipboard
-      try {
-        await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-        alert('Score copied to clipboard!');
-      } catch (err) {
-        console.log('Error copying to clipboard:', err);
-      }
-    }
-  };
-
-  const handleShare = async () => {
-    // Just generate and show the card preview
-    await generateCardPreview();
-  };
-
-  const shareToPlatform = async (platform: string) => {
-    if (!generatedCardBlob) return;
-
-    const shareText = `I scored ${score}/${totalAttempts} (${accuracy}%) on Real or AI? Can you beat my score? 🎯`;
-    const shareUrl = window.location.origin;
-
-    switch (platform) {
-      case 'link':
-        try {
-          await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-          alert('Link copied to clipboard!');
-        } catch (err) {
-          console.log('Error copying to clipboard:', err);
-        }
-        break;
-      
-      case 'twitter':
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-        window.open(twitterUrl, '_blank');
-        break;
-      
-      case 'pinterest':
-        const pinterestUrl = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&description=${encodeURIComponent(shareText)}`;
-        window.open(pinterestUrl, '_blank');
-        break;
-      
-      case 'facebook':
-        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
-        window.open(facebookUrl, '_blank');
-        break;
-      
-      case 'linkedin':
-        const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent('Real or AI? Game')}&summary=${encodeURIComponent(shareText)}`;
-        window.open(linkedinUrl, '_blank');
-        break;
-      
-      case 'download':
-        const url = URL.createObjectURL(generatedCardBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'real-or-ai-score.png';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        break;
-    }
-  };
-
-  const generateCardPreview = async () => {
     try {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      canvas.width = 1024;
-      canvas.height = 1024;
-
-      // Get a random pre-made gradient card
-      const gradientCards = ['/gradientcards/1.jpg', '/gradientcards/2.jpg', '/gradientcards/3.jpg'];
-      const randomCard = gradientCards[Math.floor(Math.random() * gradientCards.length)];
-
-      // Load the pre-made gradient card
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = randomCard;
-      });
-
-      // Draw the pre-made gradient card (it's already 1024x1024)
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      // Add only the score and accuracy text centered in the square
-      ctx.fillStyle = '#2C2C2C'; // Dark gray color from the example
-      ctx.textAlign = 'center';
-      
-      // Score (most prominent, centered in the square)
-      ctx.font = 'bold 100px Arial, sans-serif';
-      ctx.fillText(`${score}/${totalAttempts}`, canvas.width / 2, canvas.height / 2 - 40);
-      
-      // Accuracy (centered below score)
-      ctx.font = '56px Arial, sans-serif';
-      ctx.fillText(`${accuracy}% Accuracy`, canvas.width / 2, canvas.height / 2 + 40);
-
-      // Convert to data URL for preview and blob for sharing
-      const dataUrl = canvas.toDataURL('image/png');
-      canvas.toBlob((blob) => {
-        if (blob) {
-          setGeneratedCardBlob(blob);
-        }
-      }, 'image/png');
-      setCardImageUrl(dataUrl);
-      setShowCardPreview(true);
-    } catch (error) {
-      console.log('Error generating card preview:', error);
-    }
+      if (navigator.share) {
+        await navigator.share({ title: "Real or AI?", text, url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(`${text} ${shareUrl}`);
+        alert("Link copied to clipboard ✨");
+      }
+    } catch (_) {}
   };
+
+  const downloadShareImage = async () => {
+    const node = document.getElementById("share-card");
+    if (!node) return;
+    const dataUrl = await domtoimage.toPng(node, { quality: 1, bgcolor: "#0b1021" });
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = `realorai_${score}-${totalAttempts}.png`;
+    a.click();
+  };
+
 
   const categories: FilterCategory[] = ['all', 'people', 'nature', 'city', 'interior'];
   const otherCategories = categories.filter(cat => cat !== category);
@@ -315,195 +128,189 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
   if (!feedback) return null;
 
   return (
-    <div className="w-full h-full flex flex-col justify-between p-8">
-      {/* Logo */}
-      <div className="flex justify-center">
-        <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer">
-          <img src="/realorai.svg" alt="Real or AI Logo" className="h-8 w-auto" />
-        </a>
-      </div>
-
+    <div className="min-h-[100svh] w-full relative overflow-hidden text-white flex items-center justify-center px-6">
+      {/* Calm, fluid background (very slow, low opacity) */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-2xl mx-auto text-center"
-      >
-      {/* Score Display */}
-      <div className="mb-8">
-        <div className="text-6xl mb-4">{feedback.emoji}</div>
-        <div className="text-4xl font-bold text-gray-900 mb-2">
-          {score}/{totalAttempts}
-        </div>
-        <div className="text-xl text-gray-600 mb-4">
-          {accuracy}% Accuracy
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{feedback.title.replace(feedback.emoji, '').trim()}</h1>
-      </div>
-
-      {/* Feedback Message */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="mb-8"
-      >
-        <p className="text-lg text-gray-700 mb-4 leading-relaxed">
-          {feedback.message}
-        </p>
-        <p className="text-base text-gray-600 italic">
-          💡 {feedback.tip}
-        </p>
-      </motion.div>
-
-      {/* Category Suggestions */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="mb-8"
-      >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Try a different category:
-        </h3>
-        <div className="flex flex-wrap justify-center gap-3">
-          {otherCategories.slice(0, 3).map((cat) => (
-            <button
-              key={cat}
-              onClick={() => onCategoryChange(cat)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
-            >
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </button>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Action Buttons */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-      >
-        <button
-          onClick={onPlayAgain}
-          className="px-8 py-3 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-colors"
-        >
-          Play Again
-        </button>
-        <button
-          onClick={handleShare}
-          className="px-8 py-3 bg-white text-gray-700 border border-gray-200 rounded-full font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-          </svg>
-          Share Score
-        </button>
-      </motion.div>
-      </motion.div>
-
-      {/* Footer */}
-      <div className="flex justify-center">
-        <p className="text-sm text-gray-500">
-          Made with ❤️ by <a href="https://alkemist.no/realorai" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-gray-900">Alkemist</a>
-        </p>
-      </div>
-
-      {/* Card Preview Modal */}
-      {showCardPreview && cardImageUrl && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Share</h3>
-              <button
-                onClick={() => setShowCardPreview(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="mb-6">
-              <img 
-                src={cardImageUrl} 
-                alt="Shareable score card" 
-                className="w-full rounded-lg shadow-lg"
-              />
-            </div>
-            
-            {/* Platform Sharing Icons */}
-            <div className="flex justify-center gap-8 mb-6">
-              <button
-                onClick={() => shareToPlatform('link')}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                title="Copy Link"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-              </button>
-              
-              <button
-                onClick={() => shareToPlatform('twitter')}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                title="Share on X"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                </svg>
-              </button>
-              
-              <button
-                onClick={() => shareToPlatform('pinterest')}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                title="Share on Pinterest"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.746-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001.012.001z"/>
-                </svg>
-              </button>
-              
-              <button
-                onClick={() => shareToPlatform('facebook')}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                title="Share on Facebook"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-              </button>
-              
-              <button
-                onClick={() => shareToPlatform('linkedin')}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                title="Share on LinkedIn"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                </svg>
-              </button>
-              
-              <button
-                onClick={() => shareToPlatform('download')}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                title="Download Image"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </button>
-            </div>
-            
-            <button
-              onClick={() => setShowCardPreview(false)}
-              className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 font-medium"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+        aria-hidden
+        className="absolute inset-0 -z-20 bg-[#0b1021]"
+      />
+      {![true, undefined].includes(prefersReduced) && (
+        <>
+          <motion.div
+            aria-hidden
+            className="absolute -z-10 w-[70vmax] h-[70vmax] rounded-full blur-3xl opacity-25"
+            style={{ background: "radial-gradient(circle at 20% 30%, #9aa7ff, transparent 60%)" }}
+            initial={{ x: "-15%", y: "-20%" }}
+            animate={{ x: ["-15%", "-5%", "-12%"], y: ["-20%", "-10%", "-20%"] }}
+            transition={{ duration: 90, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            aria-hidden
+            className="absolute -z-10 w-[60vmax] h-[60vmax] rounded-full blur-3xl opacity-20"
+            style={{ background: "radial-gradient(circle at 80% 20%, #78f0d6, transparent 60%)" }}
+            initial={{ x: "20%", y: "-10%" }}
+            animate={{ x: ["20%", "12%", "22%"], y: ["-10%", "0%", "-10%"] }}
+            transition={{ duration: 100, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            aria-hidden
+            className="absolute -z-10 w-[80vmax] h-[80vmax] rounded-full blur-3xl opacity-15"
+            style={{ background: "radial-gradient(circle at 65% 85%, #f6e08a, transparent 60%)" }}
+            initial={{ x: "10%", y: "30%" }}
+            animate={{ x: ["10%", "5%", "12%"], y: ["30%", "40%", "30%"] }}
+            transition={{ duration: 110, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </>
       )}
+      {/* Vignette for readability */}
+      <div className="pointer-events-none absolute inset-0 -z-5 bg-[radial-gradient(120%_120%_at_50%_40%,transparent_45%,#0b1021_92%)]" />
+
+      {/* Center column */}
+      <div className="w-full max-w-xl">
+        {/* Brand logo */}
+        <div className="flex items-center justify-center mb-6">
+          <img src="/realorai.svg" alt="Real or AI" className="h-8 md:h-9 opacity-90" />
+        </div>
+
+        {/* Flip container */}
+        <div style={{ perspective: "1600px" }} className="relative">
+          <motion.div
+            animate={{ rotateY: flipped ? 180 : 0 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            style={{ transformStyle: "preserve-3d" }}
+            className="relative will-change-transform"
+          >
+            {/* FRONT: Results */}
+            <div style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }} className="rounded-3xl border border-white/15 bg-slate-900/60 backdrop-blur-3xl shadow-[0_30px_120px_-25px_rgba(0,0,0,0.65)]">
+              <div className="p-8 md:p-10">
+                <div className="flex flex-col items-center text-center">
+                  {/* Progress ring */}
+                  <div className="relative mb-6">
+                    <div
+                      className="w-40 h-40 md:w-48 md:h-48 rounded-full grid place-items-center"
+                      style={{
+                        background: `conic-gradient(#6366f1 ${accuracy * 3.6}deg, rgba(255,255,255,0.12) 0deg)`
+                      }}
+                    >
+                      <div className="w-[85%] h-[85%] rounded-full bg-slate-900/80 backdrop-blur-xl ring-1 ring-white/20 grid place-items-center">
+                        <div className="flex flex-col items-center">
+                          <div className="text-4xl font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{score}/{totalAttempts}</div>
+                          <div className="flex items-center gap-1 text-sm text-white/80 mt-1">
+                            <Leaf className="w-4 h-4"/>
+                            <span>{accuracy}% accuracy</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  <p className="text-white/95 text-lg md:text-xl leading-snug max-w-md mb-3 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{feedback.message}</p>
+                  <p className="text-white/80 text-sm max-w-lg mb-8 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
+                    💡 {feedback.tip}
+                  </p>
+
+                  {/* CTAs */}
+                  <div className="flex flex-wrap justify-center gap-3 mb-6">
+                    <button
+                      onClick={onPlayAgain}
+                      className="rounded-xl px-5 py-6 text-base md:text-lg font-medium shadow-lg shadow-indigo-600/30 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2 inline"/> Play again
+                    </button>
+                    <button 
+                      onClick={() => setFlipped(true)} 
+                      className="rounded-xl px-5 py-6 text-base md:text-lg border border-white/25 bg-transparent text-white hover:bg-white/10"
+                    >
+                      <Share2 className="w-4 h-4 mr-2 inline"/> Share score
+                    </button>
+                    <button className="rounded-xl px-5 py-6 text-base md:text-lg text-white/80 hover:text-white hover:bg-white/10 bg-transparent">
+                      <History className="w-4 h-4 mr-2 inline"/> Review mistakes
+                    </button>
+                  </div>
+
+                  {/* Category chips */}
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {otherCategories.slice(0, 3).map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => onCategoryChange(cat)}
+                        className="px-4 py-2 rounded-full text-sm font-medium text-gray-200 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md"
+                      >
+                        <span className="mr-1">
+                          {cat === 'nature' ? '🌿' : cat === 'city' ? '🏙️' : cat === 'people' ? '👥' : cat === 'interior' ? '🏠' : '✨'}
+                        </span>
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* BACK: Shareable card */}
+            <div 
+              id="share-card" 
+              style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }} 
+              className={`rounded-3xl border border-white/15 bg-slate-900/70 backdrop-blur-3xl shadow-[0_30px_120px_-25px_rgba(0,0,0,0.65)] absolute inset-0 ${flipped ? "" : "pointer-events-none"}`}
+            >
+              <div className="p-8 md:p-10 flex flex-col items-center text-center gap-5">
+                <img src="/realorai.svg" alt="Real or AI" className="h-7 opacity-90" />
+
+                <div className="relative">
+                  <div
+                    className="w-44 h-44 md:w-56 md:h-56 rounded-full grid place-items-center"
+                    style={{
+                      background: `conic-gradient(#6366f1 ${accuracy * 3.6}deg, rgba(255,255,255,0.12) 0deg)`
+                    }}
+                  >
+                    <div className="w-[85%] h-[85%] rounded-full bg-slate-900/80 backdrop-blur-xl ring-1 ring-white/20 grid place-items-center">
+                      <div className="flex flex-col items-center">
+                        <div className="text-5xl font-extrabold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{score}/{totalAttempts}</div>
+                        <div className="text-sm text-white/80 mt-1">{accuracy}% accuracy</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 blur-2xl rounded-full bg-indigo-400/20 -z-10" />
+                </div>
+
+                <div className="text-white/90 text-lg">Can you beat my score?</div>
+                <div className="text-white/60 text-sm">Play at {window.location.origin.replace("https://", "")} </div>
+
+                <div className="flex flex-wrap justify-center gap-3 pt-2">
+                  <button 
+                    onClick={handleWebShare} 
+                    className="rounded-xl px-5 py-6 text-base border border-white/25 bg-transparent text-white hover:bg-white/10"
+                  >
+                    <Share2 className="w-4 h-4 mr-2 inline"/> Share link
+                  </button>
+                  <button 
+                    onClick={downloadShareImage} 
+                    className="rounded-xl px-5 py-6 text-base bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white"
+                  >
+                    <Download className="w-4 h-4 mr-2 inline"/> Download image
+                  </button>
+                  <button 
+                    onClick={() => setFlipped(false)} 
+                    className="rounded-xl px-5 py-6 text-base text-white/80 hover:text-white hover:bg-white/10 bg-transparent"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2 inline"/> Back
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1 text-white/50 text-xs">
+                  <LinkIcon className="w-3 h-3"/>
+                  <span>{window.location.origin}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="mt-8 text-gray-400 text-sm text-center">
+          Made with ❤️ by <a href="https://alkemist.no" className="underline decoration-white/30 hover:decoration-white">Alkemist</a>
+        </div>
+      </div>
     </div>
   );
 };
