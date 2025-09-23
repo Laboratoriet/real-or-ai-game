@@ -471,13 +471,11 @@ const GameBoard: React.FC = () => {
                   >
                     <ImageCard
                       image={currentMobileImage}
-                      index={0}
                       selected={false}
                       showResult={false}
                       isCorrect={null}
                       onSelect={() => {}}
                       disabled={false}
-                      isMobileView={true}
                     />
                   </motion.div>
                  ) : (
@@ -524,17 +522,15 @@ const GameBoard: React.FC = () => {
           <div className="flex-grow flex flex-col min-h-0 w-full">
             <div className="relative w-full mt-2"> {/* Reduced top margin */}
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 md:px-4 2xl:px-0">
-                 {shuffledDesktopImages.map((image, index) => (
+                 {shuffledDesktopImages.map((image) => (
                    <ImageCard
                       key={image.id}
                       image={image}
-                      index={index}
                       selected={state.selectedImageId === image.id}
                       showResult={state.showFeedback && state.selectedImageId === image.id}
                       isCorrect={state.isCorrect ?? false}
                       onSelect={() => handleImageSelect(image.id)}
                       disabled={state.showFeedback || !!state.selectedImageId}
-                      isMobileView={false}
                    />
                  ))}
                </div>

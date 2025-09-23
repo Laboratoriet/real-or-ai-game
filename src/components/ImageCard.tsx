@@ -1,40 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Image } from '../types';
 
 interface ImageCardProps {
   image: Image;
-  index: number;
   selected: boolean;
   showResult: boolean;
   isCorrect: boolean | null;
   onSelect: (id: string) => void;
   disabled: boolean;
-  isMobileView?: boolean;
 }
 
 const ImageCard: React.FC<ImageCardProps> = ({
   image,
-  index,
   selected,
   showResult,
   isCorrect,
   onSelect,
   disabled,
-  isMobileView,
 }) => {
   const [isFullImageLoaded, setIsFullImageLoaded] = useState(false);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Reset loaded state when image src changes
     setIsFullImageLoaded(false);
 
     if (image.src) {
-      // Fetch the image and create a blob URL to hide original path
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
       fetch(image.src)
         .then((res) => res.blob())
         .then((blob) => {
           const url = URL.createObjectURL(blob);
+          objectUrlRef.current = url;
           setObjectUrl(url);
           setIsFullImageLoaded(true);
         })
@@ -43,7 +44,10 @@ const ImageCard: React.FC<ImageCardProps> = ({
         });
     }
     return () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
     };
   }, [image.src]);
 
