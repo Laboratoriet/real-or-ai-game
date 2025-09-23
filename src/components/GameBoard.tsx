@@ -605,6 +605,7 @@ const GameBoard: React.FC = () => {
             onPlayAgain={handlePlayAgain}
             onCategoryChange={handleCategoryChange}
             isMobile={isMobile}
+            streak={state.correctStreak}
           />
         </div>
       )}

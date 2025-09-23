@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
 import { FilterCategory } from '../types';
-import { Share2, RefreshCw, Target, History, Download, Link as LinkIcon, ArrowLeft } from 'lucide-react';
-import domtoimage from 'dom-to-image-more';
+import { Share2, RefreshCw, Target } from 'lucide-react';
 
 interface SummaryScreenProps {
   score: number;
@@ -11,6 +9,7 @@ interface SummaryScreenProps {
   onPlayAgain: () => void;
   onCategoryChange: (category: FilterCategory) => void;
   isMobile?: boolean;
+  streak?: number;
 }
 
 interface DynamicFeedback {
@@ -27,11 +26,11 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
   onPlayAgain,
   onCategoryChange,
   isMobile = false,
+  streak,
 }) => {
   const [feedback, setFeedback] = useState<DynamicFeedback | null>(null);
   const [loading, setLoading] = useState(true);
-  const [flipped, setFlipped] = useState(false);
-  const prefersReduced = useReducedMotion();
+  const [copied, setCopied] = useState(false);
 
   const accuracy = totalAttempts > 0 ? Math.round((score / totalAttempts) * 100) : 0;
 
@@ -106,76 +105,21 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
     }
   };
 
-  const handleWebShare = async () => {
-    const text = `I scored ${score}/${totalAttempts} (${accuracy}%) in Real or AI?`; 
-    const shareUrl = window.location.origin;
+  const handleCopyShare = async () => {
+    const lines = [
+      'Real or AI?',
+      `My score: ${score}/${totalAttempts}`,
+      `Streak: ${streak ?? 0}`,
+      '',
+      'Play yourself at:',
+      'www.aikemist.no',
+    ];
+    const text = lines.join('\n');
     try {
-      if (navigator.share) {
-        await navigator.share({ title: "Real or AI?", text, url: shareUrl });
-      } else {
-        await navigator.clipboard.writeText(`${text} ${shareUrl}`);
-        alert("Link copied to clipboard ✨");
-      }
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (_) {}
-  };
-
-  const downloadShareImage = async () => {
-    const node = document.getElementById("share-card");
-    if (!node) return;
-    
-         // Create a 1024x1024 container with background
-         const tempContainer = document.createElement('div');
-         tempContainer.style.position = 'absolute';
-         tempContainer.style.left = '-9999px';
-         tempContainer.style.top = '-9999px';
-         tempContainer.style.width = '1024px';
-         tempContainer.style.height = '1024px';
-         tempContainer.style.background = '#0b1021';
-         tempContainer.style.display = 'flex';
-         tempContainer.style.alignItems = 'center';
-         tempContainer.style.justifyContent = 'center';
-         tempContainer.style.padding = '80px';
-    
-         // Clone the card content without the rotation transform
-         const clonedCard = node.cloneNode(true) as HTMLElement;
-         clonedCard.style.transform = 'none'; // Remove the 180deg rotation
-         clonedCard.style.position = 'relative';
-         clonedCard.style.width = '100%';
-         clonedCard.style.height = '100%';
-         clonedCard.style.border = 'none'; // Remove border
-         clonedCard.style.boxShadow = 'none'; // Remove shadow
-         clonedCard.style.maxWidth = '864px'; // Make card bigger in container
-    
-    // Remove borders from all child elements
-    const allElements = clonedCard.querySelectorAll('*');
-    allElements.forEach((el: any) => {
-      el.style.border = 'none';
-      el.style.outline = 'none';
-    });
-    
-    // Ensure footer is on one line
-    const footerElement = clonedCard.querySelector('.text-white\\/50');
-    if (footerElement) {
-      (footerElement as HTMLElement).style.whiteSpace = 'nowrap';
-    }
-    
-    tempContainer.appendChild(clonedCard);
-    document.body.appendChild(tempContainer);
-    
-    try {
-      const dataUrl = await domtoimage.toPng(tempContainer, { 
-        quality: 1, 
-        bgcolor: "#0b1021",
-        width: 1024,
-        height: 1024
-      });
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `realorai_${score}-${totalAttempts}.png`;
-      a.click();
-    } finally {
-      document.body.removeChild(tempContainer);
-    }
   };
 
 
@@ -194,224 +138,56 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
   if (!feedback) return null;
 
   return (
-    <div className="min-h-[100svh] w-full relative overflow-hidden text-white flex items-center justify-center px-6">
-      {/* Calm, fluid background (very slow, low opacity) */}
-      <motion.div
-        aria-hidden
-        className="absolute inset-0 -z-20 bg-[#0b1021]"
-      />
-      {![true, undefined].includes(prefersReduced) && (
-        <>
-          <motion.div
-            aria-hidden
-            className="absolute -z-10 w-[70vmax] h-[70vmax] rounded-full blur-3xl opacity-25"
-            style={{ background: "radial-gradient(circle at 20% 30%, #9aa7ff, transparent 60%)" }}
-            initial={{ x: "-15%", y: "-20%" }}
-            animate={{ x: ["-15%", "-5%", "-12%"], y: ["-20%", "-10%", "-20%"] }}
-            transition={{ duration: 90, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            aria-hidden
-            className="absolute -z-10 w-[60vmax] h-[60vmax] rounded-full blur-3xl opacity-20"
-            style={{ background: "radial-gradient(circle at 80% 20%, #78f0d6, transparent 60%)" }}
-            initial={{ x: "20%", y: "-10%" }}
-            animate={{ x: ["20%", "12%", "22%"], y: ["-10%", "0%", "-10%"] }}
-            transition={{ duration: 100, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            aria-hidden
-            className="absolute -z-10 w-[80vmax] h-[80vmax] rounded-full blur-3xl opacity-15"
-            style={{ background: "radial-gradient(circle at 65% 85%, #f6e08a, transparent 60%)" }}
-            initial={{ x: "10%", y: "30%" }}
-            animate={{ x: ["10%", "5%", "12%"], y: ["30%", "40%", "30%"] }}
-            transition={{ duration: 110, repeat: Infinity, ease: "easeInOut" }}
-          />
-        </>
-      )}
-      {/* Vignette for readability */}
-      <div className="pointer-events-none absolute inset-0 -z-5 bg-[radial-gradient(120%_120%_at_50%_40%,transparent_45%,#0b1021_92%)]" />
-
-      {/* Center column */}
-      <div className="w-full max-w-xl">
-        {/* Brand logo - only show when not flipped, match main game positioning */}
-        {!flipped && (
-          <div className="flex items-center justify-center mb-4 md:mb-6">
-            <img src="/realorai-white.svg" alt="Real or AI" className="h-6 md:h-8 w-auto opacity-90" />
+    <div className="min-h-[100svh] w-full bg-white text-gray-900 flex items-center justify-center px-6">
+      <div className="w-full max-w-xl text-center">
+        <div className="flex items-center justify-center mb-6">
+          <img src="/realorai.svg" alt="Real or AI" className="h-8 w-auto" />
+        </div>
+        <div className="mb-6">
+          <div className="text-5xl font-semibold">{score}/{totalAttempts}</div>
+          <div className="mt-2 inline-flex items-center gap-2 text-gray-700">
+            <Target className="w-4 h-4" />
+            <span>{accuracy}% accuracy</span>
           </div>
-        )}
+        </div>
+        <p className="text-gray-700 text-base mb-2">{feedback.message}</p>
+        <p className="text-gray-500 text-sm mb-8">💡 {feedback.tip}</p>
 
-        {/* Flip container */}
-        <div style={{ perspective: "1600px" }} className="relative">
-          <motion.div
-            animate={{ rotateY: flipped ? 180 : 0 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            style={{ transformStyle: "preserve-3d" }}
-            className="relative will-change-transform"
+        <div className="flex flex-wrap justify-center gap-3 mb-6">
+          <button
+            onClick={onPlayAgain}
+            className="rounded-md px-5 py-3 text-base bg-gray-900 text-white hover:bg-black"
           >
-            {/* FRONT: Results */}
-            <div style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }} className="rounded-3xl border border-white/15 bg-slate-900/60 backdrop-blur-3xl shadow-[0_30px_120px_-25px_rgba(0,0,0,0.65)]">
-              <div className="p-8 md:p-10">
-                <div className="flex flex-col items-center text-center">
-                  {/* Progress ring */}
-                  <div className="relative mb-6">
-                    <div
-                      className="w-40 h-40 md:w-48 md:h-48 rounded-full grid place-items-center"
-                      style={{
-                        background: `conic-gradient(#6366f1 ${accuracy * 3.6}deg, rgba(255,255,255,0.12) 0deg)`
-                      }}
-                    >
-                      <div className="w-[85%] h-[85%] rounded-full bg-slate-900/80 backdrop-blur-xl ring-1 ring-white/20 grid place-items-center">
-                        <div className="flex flex-col items-center">
-                          <div className="text-4xl font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{score}/{totalAttempts}</div>
-                          <div className="flex items-center gap-1 text-sm text-white/80 mt-1">
-                            <Target className="w-4 h-4"/>
-                            <span>{accuracy}% accuracy</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Message */}
-                  <p className="text-white/95 text-lg md:text-xl leading-snug max-w-md mb-3 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{feedback.message}</p>
-                  <p className="text-white/80 text-sm max-w-lg mb-8 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
-                    💡 {feedback.tip}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* BACK: Shareable card */}
-            <div 
-              id="share-card" 
-              style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }} 
-              className={`rounded-3xl border border-white/15 bg-slate-900/70 backdrop-blur-3xl shadow-[0_30px_120px_-25px_rgba(0,0,0,0.65)] absolute inset-0 ${flipped ? "" : "pointer-events-none"}`}
-            >
-              <div className="p-6 md:p-8 flex flex-col items-center text-center gap-12 h-full justify-between">
-                <div className="flex flex-col items-center gap-12">
-                  <div className="pt-4">
-                    <img 
-                      src="/realorai-white.svg" 
-                      alt="Real or AI" 
-                      className="h-7 opacity-90" 
-                    />
-                  </div>
-
-                  <div className="relative">
-                    <div
-                      className="w-44 h-44 md:w-48 md:h-48 rounded-full grid place-items-center"
-                      style={{
-                        background: `conic-gradient(#6366f1 ${accuracy * 3.6}deg, rgba(255,255,255,0.12) 0deg)`
-                      }}
-                    >
-                      <div className="w-[85%] h-[85%] rounded-full bg-slate-900/80 backdrop-blur-xl ring-1 ring-white/20 grid place-items-center">
-                        <div className="flex flex-col items-center">
-                          <div className="text-4xl font-extrabold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">{score}/{totalAttempts}</div>
-                          <div className="text-sm text-white/80 mt-1">{accuracy}% accuracy</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="absolute inset-0 blur-2xl rounded-full bg-indigo-400/20 -z-10" />
-                  </div>
-
-                  <div className="space-y-10 w-full max-w-xs px-4">
-                    <div className="text-white/90 text-xl md:text-2xl font-medium">Can you beat my score?</div>
-                    <div className="text-white/60 text-sm text-center">
-                      <div>Test your skills, play the game at</div>
-                      <div className="font-medium mt-4 text-base break-all">www.aikemist.no</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-white/50 text-xs">
-                  Made with ❤️ by Alkemist
-                </div>
-              </div>
-            </div>
-          </motion.div>
+            <RefreshCw className="w-4 h-4 mr-2 inline"/> Play again
+          </button>
+          <button
+            onClick={handleCopyShare}
+            className="rounded-md px-5 py-3 text-base border border-gray-300 text-gray-800 hover:bg-gray-50"
+          >
+            <Share2 className="w-4 h-4 mr-2 inline"/> {copied ? 'Copied!' : 'Share'}
+          </button>
         </div>
 
-        {/* Action buttons - only show when not flipped */}
-        {!flipped && (
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <button
-              onClick={onPlayAgain}
-              className="rounded-xl px-5 py-6 text-base md:text-lg font-medium shadow-lg shadow-indigo-600/30 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white"
-            >
-              <RefreshCw className="w-4 h-4 mr-2 inline"/> Play again
-            </button>
-            <button 
-              onClick={() => setFlipped(true)} 
-              className="rounded-xl px-5 py-6 text-base md:text-lg border border-white/25 bg-transparent text-white hover:bg-white/10"
-            >
-              <Share2 className="w-4 h-4 mr-2 inline"/> Share score
-            </button>
+        <div className="mt-2 flex flex-col items-center">
+          <p className="text-gray-600 text-sm mb-3">Try another category</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {otherCategories.slice(0, 3).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => onCategoryChange(cat)}
+                className="px-4 py-2 rounded-full text-sm font-medium text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 border border-gray-200"
+              >
+                <span className="mr-1">
+                  {cat === 'nature' ? '🌿' : cat === 'city' ? '🏙️' : cat === 'people' ? '👥' : cat === 'interior' ? '🏠' : '✨'}
+                </span>
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
 
-        {/* Share buttons - only show when flipped */}
-        {flipped && (
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <button 
-              onClick={handleWebShare} 
-              className="rounded-xl px-5 py-6 text-base border border-white/25 bg-transparent text-white hover:bg-white/10"
-            >
-              <Share2 className="w-4 h-4 mr-2 inline"/> Share link
-            </button>
-            <button 
-              onClick={downloadShareImage} 
-              className="rounded-xl px-5 py-6 text-base bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white"
-            >
-              <Download className="w-4 h-4 mr-2 inline"/> Download image
-            </button>
-            <button
-              onClick={onPlayAgain}
-              className="rounded-xl px-5 py-6 text-base font-medium shadow-lg shadow-indigo-600/30 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white"
-            >
-              <RefreshCw className="w-4 h-4 mr-2 inline"/> Play again
-            </button>
-          </div>
-        )}
-
-        {/* Tip and categories - only show when not flipped */}
-        {!flipped && (
-          <>
-            <div className="mt-6 flex flex-col items-center">
-              <p className="text-white/80 text-sm drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] mb-4">
-                Try another category
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-              {otherCategories.slice(0, 3).map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => onCategoryChange(cat)}
-                  className="px-4 py-2 rounded-full text-sm font-medium text-gray-200 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md"
-                >
-                  <span className="mr-1">
-                    {cat === 'nature' ? '🌿' : cat === 'city' ? '🏙️' : cat === 'people' ? '👥' : cat === 'interior' ? '🏠' : '✨'}
-                  </span>
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </button>
-              ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Back button - only show when flipped */}
-        {flipped && (
-          <div className="mt-4 flex justify-center">
-            <button 
-              onClick={() => setFlipped(false)} 
-              className="rounded-xl px-6 py-3 text-base text-white/80 hover:text-white hover:bg-white/10 bg-transparent"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2 inline"/> Back to results
-            </button>
-          </div>
-        )}
-
-        <div className="mt-auto pt-8 text-gray-400 text-sm text-center">
-          Made with ❤️ by <a href="https://alkemist.no" className="underline decoration-white/30 hover:decoration-white">Alkemist</a>
+        <div className="mt-10 text-gray-400 text-sm text-center">
+          Made with ❤️ by <a href="https://alkemist.no" className="underline">Alkemist</a>
         </div>
       </div>
     </div>
