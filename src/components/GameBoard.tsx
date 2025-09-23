@@ -55,11 +55,11 @@ const GameBoard: React.FC = () => {
   // Desktop view still uses useImagePair
   const {
     currentPair,
-    loading: pairLoading, // Rename to avoid conflict
+    loading: pairLoading,
     error: pairError,
     generateRandomPair,
     getShuffledImages,
-  } = useImagePair();
+  } = useImagePair(state.selectedCategory);
 
   const nextActionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -142,7 +142,7 @@ const GameBoard: React.FC = () => {
     if (isMobile) {
       initializeMobileGame(); // Re-initialize mobile state
     } else {
-      generateRandomPair(state.selectedCategory); // Fetch new pair for desktop
+      generateRandomPair(state.selectedCategory);
     }
   };
 
@@ -275,7 +275,7 @@ const GameBoard: React.FC = () => {
           advanceMobileImage();
         } else {
           // Desktop: Reset feedback and fetch next pair
-          nextPair(); 
+          nextPair();
           generateRandomPair(state.selectedCategory);
         }
       }, 750);

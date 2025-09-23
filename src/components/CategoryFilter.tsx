@@ -23,7 +23,6 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
 }) => {
   const categories: FilterCategory[] = ['all', 'people', 'nature', 'city', 'interior'];
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [currentSelected, setCurrentSelected] = useState<FilterCategory>(selectedCategory);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -42,11 +41,6 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isDropdownOpen]);
-
-  // Keep internal selection in sync when parent changes
-  useEffect(() => {
-    setCurrentSelected(selectedCategory);
-  }, [selectedCategory]);
 
   if (isMobile) {
     return (
@@ -90,12 +84,11 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
                   <button
                     key={category}
                     onClick={() => {
-                      setCurrentSelected(category);
                       onCategoryChange(category);
                       setIsDropdownOpen(false);
                     }}
                     className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 first:rounded-t-md last:rounded-b-md ${
-                      currentSelected === category ? 'font-bold text-gray-900' : 'text-gray-700'
+                      selectedCategory === category ? 'font-bold text-gray-900' : 'text-gray-700'
                     }`}
                   >
                     {categoryLabels[category]}
@@ -113,11 +106,11 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
     <div className="w-full max-w-lg mx-auto mb-6">
       <div className="flex justify-center gap-6">
         {categories.map((category) => {
-          const isSelected = currentSelected === category;
+          const isSelected = selectedCategory === category;
           return (
             <button
               key={category}
-              onClick={() => { setCurrentSelected(category); onCategoryChange(category); }}
+              onClick={() => { onCategoryChange(category); }}
               className={`text-sm transition-all duration-200 hover:text-gray-900 ${
                 isSelected
                   ? 'font-bold text-gray-900 underline decoration-2 underline-offset-2'

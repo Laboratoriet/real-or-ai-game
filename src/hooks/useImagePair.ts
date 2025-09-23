@@ -4,7 +4,7 @@ import { getCategoryImages, availableCategories, getAllUniqueImages } from '../d
 
 const RECENT_HISTORY_LENGTH = 50; // Keep history length
 
-export const useImagePair = () => {
+export const useImagePair = (activeFilter: FilterCategory = 'all') => {
   const [currentPair, setCurrentPair] = useState<ImagePair | null>(null);
   const [loading, setLoading] = useState(true);
   const [shuffledImages, setShuffledImages] = useState<Image[]>([]);
@@ -14,7 +14,8 @@ export const useImagePair = () => {
   const recentlyUsedIds = useRef<string[]>([]);
 
   // --- Wrap generateRandomPair in useCallback ---
-  const generateRandomPair = useCallback((filterCategory: FilterCategory = 'all') => {
+  const generateRandomPair = useCallback((filterCategory?: FilterCategory) => {
+    const effectiveFilter = filterCategory ?? activeFilter;
     setLoading(true);
     setError(null);
     
@@ -31,9 +32,9 @@ export const useImagePair = () => {
     // --- Select a category based on filter ---
     let chosenCategory: Category;
     
-    if (filterCategory === 'all') {
+    if (effectiveFilter === 'all') {
       // Original logic: bias towards 'people' when showing all categories
-      const peopleWeight = 3;
+      const peopleWeight = 1; // remove bias
       if (availableCategories.includes('people') && availableCategories.length > 1) {
         const weightedList = availableCategories.reduce((acc, category) => {
           const weight = (category === 'people') ? peopleWeight : 1;
@@ -48,7 +49,7 @@ export const useImagePair = () => {
       }
     } else {
       // Use the selected filter category
-      chosenCategory = filterCategory;
+      chosenCategory = effectiveFilter as Category;
     }
     
     console.log('[Category Choice] Chosen:', chosenCategory);
@@ -106,12 +107,11 @@ export const useImagePair = () => {
     setLoading(false);
   // Dependencies: availableCategories is stable after module load, getCategoryImages is stable.
   // State setters are stable. useRef is stable. Logic depends only on these.
-  }, []); 
+  }, [activeFilter]); 
 
   useEffect(() => {
-    // generateRandomPair is now stable
-    generateRandomPair();
-  }, [generateRandomPair]); // Dependency array includes the stable callback
+    generateRandomPair(activeFilter);
+  }, [generateRandomPair, activeFilter]);
 
   // --- Wrap getShuffledImages in useCallback ---
   const getShuffledImages = useCallback((): Image[] => {
