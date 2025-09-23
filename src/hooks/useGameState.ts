@@ -39,9 +39,16 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         isCorrect: null,
       };
     case 'RESET_GAME':
+      // Preserve the currently selected category while resetting game progress
       return {
-        ...initialState,
+        ...state,
+        score: 0,
+        totalAttempts: 0,
+        selectedImageId: null,
+        isCorrect: null,
+        showFeedback: false,
         correctStreak: 0,
+        showSummary: false,
       } as GameState;
     case 'SET_CATEGORY':
       return {
