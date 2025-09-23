@@ -113,11 +113,11 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
     <div className="w-full max-w-lg mx-auto mb-6">
       <div className="flex justify-center gap-6">
         {categories.map((category) => {
-          const isSelected = selectedCategory === category;
+          const isSelected = currentSelected === category;
           return (
             <button
               key={category}
-              onClick={() => onCategoryChange(category)}
+              onClick={() => { setCurrentSelected(category); onCategoryChange(category); }}
               className={`text-sm transition-all duration-200 hover:text-gray-900 ${
                 isSelected
                   ? 'font-bold text-gray-900 underline decoration-2 underline-offset-2'
