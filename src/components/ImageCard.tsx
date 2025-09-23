@@ -23,28 +23,31 @@ const ImageCard: React.FC<ImageCardProps> = ({
   isMobileView,
 }) => {
   const [isFullImageLoaded, setIsFullImageLoaded] = useState(false);
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
 
   useEffect(() => {
     // Reset loaded state when image src changes
     setIsFullImageLoaded(false);
 
-    if (image.lqipSrc && image.src) {
-      const img = new window.Image();
-      img.src = image.src;
-      img.onload = () => {
-        setIsFullImageLoaded(true);
-      };
-      img.onerror = () => {
-        console.error(`Failed to load image: ${image.src}`);
-        setIsFullImageLoaded(true);
-      };
-    } else {
-      // If no LQIP or no main src, consider the image loaded (or rely on native lazy loading for main src)
-      setIsFullImageLoaded(true);
+    if (image.src) {
+      // Fetch the image and create a blob URL to hide original path
+      fetch(image.src)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const url = URL.createObjectURL(blob);
+          setObjectUrl(url);
+          setIsFullImageLoaded(true);
+        })
+        .catch(() => {
+          setIsFullImageLoaded(true);
+        });
     }
-  }, [image.src, image.lqipSrc]);
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [image.src]);
 
-  const displaySrc = image.lqipSrc && !isFullImageLoaded ? image.lqipSrc : image.src;
+  const displaySrc = image.lqipSrc && !isFullImageLoaded ? image.lqipSrc : (objectUrl || image.src);
   const blurClass = image.lqipSrc && !isFullImageLoaded ? 'blur-md' : '';
 
   return (

@@ -23,6 +23,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
 }) => {
   const categories: FilterCategory[] = ['all', 'people', 'nature', 'city', 'interior'];
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [currentSelected, setCurrentSelected] = useState<FilterCategory>(selectedCategory);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -41,6 +42,11 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isDropdownOpen]);
+
+  // Keep internal selection in sync when parent changes
+  useEffect(() => {
+    setCurrentSelected(selectedCategory);
+  }, [selectedCategory]);
 
   if (isMobile) {
     return (
@@ -84,11 +90,12 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
                   <button
                     key={category}
                     onClick={() => {
+                      setCurrentSelected(category);
                       onCategoryChange(category);
                       setIsDropdownOpen(false);
                     }}
                     className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 first:rounded-t-md last:rounded-b-md ${
-                      selectedCategory === category ? 'font-bold text-gray-900' : 'text-gray-700'
+                      currentSelected === category ? 'font-bold text-gray-900' : 'text-gray-700'
                     }`}
                   >
                     {categoryLabels[category]}
