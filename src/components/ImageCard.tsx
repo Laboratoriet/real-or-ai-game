@@ -51,7 +51,9 @@ const ImageCard: React.FC<ImageCardProps> = ({
     };
   }, [image.src]);
 
-  const displaySrc = image.lqipSrc && !isFullImageLoaded ? image.lqipSrc : (objectUrl || image.src);
+  const transparentPlaceholder = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+  const placeholderSrc = image.lqipSrc || transparentPlaceholder;
+  const displaySrc = objectUrl || placeholderSrc;
   const blurClass = image.lqipSrc && !isFullImageLoaded ? 'blur-md' : '';
 
   return (
