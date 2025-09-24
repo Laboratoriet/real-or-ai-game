@@ -1,50 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Image } from '../types';
 
 interface ImageCardProps {
   image: Image;
-  index: number;
   selected: boolean;
   showResult: boolean;
   isCorrect: boolean | null;
   onSelect: (id: string) => void;
   disabled: boolean;
-  isMobileView?: boolean;
 }
 
 const ImageCard: React.FC<ImageCardProps> = ({
   image,
-  index,
   selected,
   showResult,
   isCorrect,
   onSelect,
   disabled,
-  isMobileView,
 }) => {
   const [isFullImageLoaded, setIsFullImageLoaded] = useState(false);
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Reset loaded state when image src changes
     setIsFullImageLoaded(false);
 
-    if (image.lqipSrc && image.src) {
-      const img = new window.Image();
-      img.src = image.src;
-      img.onload = () => {
-        setIsFullImageLoaded(true);
-      };
-      img.onerror = () => {
-        console.error(`Failed to load image: ${image.src}`);
-        setIsFullImageLoaded(true);
-      };
-    } else {
-      // If no LQIP or no main src, consider the image loaded (or rely on native lazy loading for main src)
-      setIsFullImageLoaded(true);
+    if (image.src) {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+      fetch(image.src)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const url = URL.createObjectURL(blob);
+          objectUrlRef.current = url;
+          setObjectUrl(url);
+          setIsFullImageLoaded(true);
+        })
+        .catch(() => {
+          setIsFullImageLoaded(true);
+        });
     }
-  }, [image.src, image.lqipSrc]);
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+    };
+  }, [image.src]);
 
-  const displaySrc = image.lqipSrc && !isFullImageLoaded ? image.lqipSrc : image.src;
+  const transparentPlaceholder = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+  const placeholderSrc = image.lqipSrc || transparentPlaceholder;
+  const displaySrc = objectUrl || placeholderSrc;
   const blurClass = image.lqipSrc && !isFullImageLoaded ? 'blur-md' : '';
 
   return (

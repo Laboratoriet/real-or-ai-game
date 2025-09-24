@@ -9,6 +9,7 @@ const initialState: Omit<GameState, 'currentCategory'> = {
   showFeedback: false,
   correctStreak: 0,
   selectedCategory: 'people',
+  showSummary: false,
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -38,14 +39,31 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         isCorrect: null,
       };
     case 'RESET_GAME':
+      // Preserve the currently selected category while resetting game progress
       return {
-        ...initialState,
+        ...state,
+        score: 0,
+        totalAttempts: 0,
+        selectedImageId: null,
+        isCorrect: null,
+        showFeedback: false,
         correctStreak: 0,
+        showSummary: false,
       } as GameState;
     case 'SET_CATEGORY':
       return {
         ...state,
         selectedCategory: action.payload,
+      };
+    case 'SHOW_SUMMARY':
+      return {
+        ...state,
+        showSummary: true,
+      };
+    case 'HIDE_SUMMARY':
+      return {
+        ...state,
+        showSummary: false,
       };
     default:
       return state;
@@ -75,6 +93,14 @@ export const useGameState = () => {
     dispatch({ type: 'SET_CATEGORY', payload: category });
   };
 
+  const showSummary = () => {
+    dispatch({ type: 'SHOW_SUMMARY' });
+  };
+
+  const hideSummary = () => {
+    dispatch({ type: 'HIDE_SUMMARY' });
+  };
+
   return {
     state,
     selectImage,
@@ -82,5 +108,7 @@ export const useGameState = () => {
     nextPair,
     resetGame,
     setCategory,
+    showSummary,
+    hideSummary,
   };
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useImagePair } from '../hooks/useImagePair';
 import { useGameState } from '../hooks/useGameState';
 import { getFilteredImages } from '../data/images'; // Import the new function
@@ -7,6 +7,7 @@ import ImageCard from './ImageCard';
 import Feedback from './Feedback';
 import ScoreDisplay from './ScoreDisplay';
 import CategoryFilter from './CategoryFilter';
+import SummaryScreen from './SummaryScreen';
 import Confetti from 'react-confetti';
 import { Image } from '../types'; // Use Image type
 
@@ -47,22 +48,29 @@ const GameBoard: React.FC = () => {
     nextPair, // Still needed for resetting feedback state
     resetGame,
     setCategory,
+    showSummary,
+    hideSummary,
   } = useGameState();
 
   // Desktop view still uses useImagePair
   const {
     currentPair,
-    loading: pairLoading, // Rename to avoid conflict
+    loading: pairLoading,
     error: pairError,
     generateRandomPair,
     getShuffledImages,
-  } = useImagePair();
+  } = useImagePair(state.selectedCategory);
 
   const nextActionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { width, height } = useWindowSize();
   const isMobile = width < MOBILE_BREAKPOINT;
+
+  // Debug: Monitor selectedCategory changes
+  useEffect(() => {
+    console.log('selectedCategory state changed to:', state.selectedCategory);
+  }, [state.selectedCategory]);
 
   // --- Mobile State --- 
   const [masterMobileList, setMasterMobileList] = useState<Image[]>([]);
@@ -78,11 +86,7 @@ const GameBoard: React.FC = () => {
   // State for swipe/exit animation (used by both)
   const [swipeDirectionForExit, setSwipeDirectionForExit] = useState<'left' | 'right' | null>(null);
   // Ref for drag position (used by mobile)
-  const x = useMotionValue(0);
-  const rotate = useTransform(x, [-150, 150], [-10, 10]);
-  const imageOpacity = useTransform(x, [-100, 0, 100], [0.5, 1, 0.5]);
-  const aiOpacity = useTransform(x, [0, 25, 100], [0, 0, 1]);
-  const realOpacity = useTransform(x, [-100, -25, 0], [1, 0, 0]);
+  // Swipe interactions removed for mobile; keep minimal animation only
 
   // Refs for mobile buttons
   const realButtonRef = useRef<HTMLButtonElement>(null);
@@ -138,17 +142,35 @@ const GameBoard: React.FC = () => {
     if (isMobile) {
       initializeMobileGame(); // Re-initialize mobile state
     } else {
-      generateRandomPair(state.selectedCategory); // Fetch new pair for desktop
+      generateRandomPair(state.selectedCategory);
     }
   };
 
   const handleCategoryChange = (category: 'all' | 'people' | 'nature' | 'city' | 'interior') => {
+    console.log('handleCategoryChange called with:', category);
+    console.log('Current state.selectedCategory before change:', state.selectedCategory);
     setCategory(category);
+    console.log('setCategory called, new category should be:', category);
+    resetGame(); // Reset score and game state when changing category
+    hideSummary(); // Hide summary when changing category
     
     if (isMobile) {
+      console.log('Initializing mobile game with category:', category);
       initializeMobileGame(category);
     } else {
+      console.log('Generating random pair with category:', category);
       generateRandomPair(category);
+    }
+  };
+
+  const handlePlayAgain = () => {
+    hideSummary();
+    resetGame();
+    
+    if (isMobile) {
+      initializeMobileGame();
+    } else {
+      generateRandomPair(state.selectedCategory);
     }
   };
 
@@ -159,8 +181,9 @@ const GameBoard: React.FC = () => {
     if (currentPair) {
       const isCorrect = imageId === currentPair.aiImage.id;
       showFeedback(isCorrect);
+      
     }
-  }, [state.selectedImageId, state.showFeedback, isMobile, currentPair, selectImage, showFeedback]);
+  }, [state.selectedImageId, state.showFeedback, state.totalAttempts, isMobile, currentPair, selectImage, showFeedback, showSummary]);
 
   // --- Mobile Guessing Logic ---
   const handleMobileGuess = useCallback((guess: 'real' | 'ai') => {
@@ -171,10 +194,11 @@ const GameBoard: React.FC = () => {
     const isCorrect = (guess === 'ai' && currentMobileImage.isAI) || (guess === 'real' && !currentMobileImage.isAI);
     showFeedback(isCorrect);
 
+
     // Attempt to blur buttons immediately after guess
     realButtonRef.current?.blur();
     aiButtonRef.current?.blur();
-  }, [state.showFeedback, currentMobileImage, isMobile, isAdvancing, showFeedback]);
+  }, [state.showFeedback, currentMobileImage, isMobile, isAdvancing, state.totalAttempts, showFeedback, showSummary]);
 
   // --- Mobile Advancement Logic --- 
   const advanceMobileImage = useCallback(() => {
@@ -221,7 +245,7 @@ const GameBoard: React.FC = () => {
     
     // Reset swipe animation state
     setSwipeDirectionForExit(null);
-    x.set(0);
+    // swipe state reset removed
     
     // Reset feedback state using game state hook
     nextPair();
@@ -233,7 +257,7 @@ const GameBoard: React.FC = () => {
     setIsAdvancing(false); // Unblock interactions END
     setButtonResetKey(prevKey => prevKey + 1); // Increment key to reset buttons
 
-  }, [masterMobileList, masterMobileIndex, uniqueImagesShownCount, nextPair, x]);
+  }, [masterMobileList, masterMobileIndex, uniqueImagesShownCount, nextPair]);
 
   // --- Feedback Timer --- (Simplified)
   useEffect(() => {
@@ -251,7 +275,7 @@ const GameBoard: React.FC = () => {
           advanceMobileImage();
         } else {
           // Desktop: Reset feedback and fetch next pair
-          nextPair(); 
+          nextPair();
           generateRandomPair(state.selectedCategory);
         }
       }, 750);
@@ -259,6 +283,15 @@ const GameBoard: React.FC = () => {
 
     return clearExistingTimer;
   }, [state.showFeedback, isMobile, advanceMobileImage, nextPair, generateRandomPair, state.selectedCategory]);
+
+  // --- Game End Check ---
+  useEffect(() => {
+    if (state.totalAttempts >= 10 && state.showFeedback) {
+      setTimeout(() => {
+        showSummary();
+      }, 1000); // Show summary after feedback
+    }
+  }, [state.totalAttempts, state.showFeedback, showSummary]);
 
   // --- Confetti Effect (Keep) ---
    useEffect(() => {
@@ -347,28 +380,7 @@ const GameBoard: React.FC = () => {
     };
   }, [handleKeyDown]); // Dependency array is important
 
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number, y: number }, velocity: { x: number, y: number } }) => {
-    if (!isMobile || isAdvancing || state.showFeedback) return;
-
-    const swipeThreshold = width / 4; // Swipe 1/4 of the screen to trigger a guess
-    const swipeVelocityThreshold = 400; // Velocity threshold for a flick
-
-    const offset = info.offset.x;
-    const velocity = info.velocity.x;
-
-    if (offset > swipeThreshold || velocity > swipeVelocityThreshold) {
-      // Swiped Right ("AI")
-      setSwipeDirectionForExit('right');
-      handleMobileGuess('ai');
-    } else if (offset < -swipeThreshold || velocity < -swipeVelocityThreshold) {
-      // Swiped Left ("Real")
-      setSwipeDirectionForExit('left');
-      handleMobileGuess('real');
-    } else {
-      // Didn't swipe far enough, animate back to center
-      animate(x, 0, { type: "spring", stiffness: 300, damping: 30 });
-    }
-  };
+  // Drag handler removed (no swipe on mobile)
 
   // --- Loading and Error States ---
   const isLoading = isMobile ? mobileLoading : pairLoading;
@@ -448,13 +460,10 @@ const GameBoard: React.FC = () => {
               <AnimatePresence mode="wait" custom={swipeDirectionForExit}>
                 {currentMobileImage ? (
                   <motion.div
-                    key={currentMobileImage.id} // Keyed by image ID for animation
-                    className="absolute w-full h-full z-10 cursor-grab overflow-hidden rounded-lg"
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                    style={{ x, rotate, opacity: imageOpacity, touchAction: 'pan-y' }}
-                    onDragEnd={handleDragEnd}
-                    variants={imageVariants} // Use existing variants
+                    key={currentMobileImage.id}
+                  className="absolute w-full h-full z-10 overflow-hidden rounded-lg"
+                    style={{ touchAction: 'pan-y' }}
+                    variants={imageVariants}
                     initial="hidden"
                     animate="visible"
                     exit="exit"
@@ -462,14 +471,11 @@ const GameBoard: React.FC = () => {
                   >
                     <ImageCard
                       image={currentMobileImage}
-                      // Props simplified for mobile card display
-                      index={0} 
                       selected={false}
                       showResult={false}
                       isCorrect={null}
-                      onSelect={() => {}} // No selection needed
-                      disabled={false} // Can always swipe/button press before feedback
-                      isMobileView={true}
+                      onSelect={() => {}}
+                      disabled={false}
                     />
                   </motion.div>
                  ) : (
@@ -477,13 +483,7 @@ const GameBoard: React.FC = () => {
                  )}
               </AnimatePresence>
 
-              {/* ... Drag Overlays ... */} 
-              <motion.div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 pointer-events-none rounded-lg" style={{ opacity: aiOpacity }}>
-                  <span className="text-gray-800 text-5xl font-bold flex flex-col items-center">🤖<span className="text-2xl mt-1">AI?</span></span>
-              </motion.div>
-              <motion.div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 pointer-events-none rounded-lg" style={{ opacity: realOpacity }}>
-                <span className="text-gray-800 text-5xl font-bold flex flex-col items-center">📷<span className="text-2xl mt-1">Real?</span></span>
-              </motion.div>
+              {/* Swipe overlays removed */}
 
               {/* ... Inline Feedback Emoji ... */} 
               <AnimatePresence>
@@ -521,29 +521,27 @@ const GameBoard: React.FC = () => {
           // ------------- DESKTOP VIEW (Largely Unchanged) -------------
           <div className="flex-grow flex flex-col min-h-0 w-full">
             <div className="relative w-full mt-2"> {/* Reduced top margin */}
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                 {shuffledDesktopImages.map((image, index) => (
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 md:px-4 2xl:px-0">
+                 {shuffledDesktopImages.map((image) => (
                    <ImageCard
                       key={image.id}
                       image={image}
-                      index={index}
                       selected={state.selectedImageId === image.id}
                       showResult={state.showFeedback && state.selectedImageId === image.id}
                       isCorrect={state.isCorrect ?? false}
                       onSelect={() => handleImageSelect(image.id)}
                       disabled={state.showFeedback || !!state.selectedImageId}
-                      isMobileView={false}
                    />
                  ))}
                </div>
                {/* ... Desktop Instruction Text ... */}
-               <div className="w-full flex justify-center mt-8 mb-4">
-                 <p className="text-gray-600 text-center text-base">
+               <div className="w-full flex justify-center mt-6 mb-3 md:mt-4 md:mb-2">
+                 <p className="text-gray-600 text-center text-base md:text-sm lg:text-base">
                    Click on the image you think is <strong>AI-generated</strong>.
                  </p>
                </div>
                {/* ... Desktop Score Display ... */}
-               <div className="w-full flex justify-center mt-4 mb-1">
+               <div className="w-full flex justify-center mt-2 mb-1 md:mt-2">
                   <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
                 </div>
             </div>
@@ -558,6 +556,20 @@ const GameBoard: React.FC = () => {
           )}
       </div>
 
+      {/* --- Summary Screen --- */}
+      {state.showSummary && (
+        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center p-4">
+          <SummaryScreen
+            score={state.score}
+            totalAttempts={state.totalAttempts}
+            category={state.selectedCategory}
+            onPlayAgain={handlePlayAgain}
+            onCategoryChange={handleCategoryChange}
+            isMobile={isMobile}
+            streak={state.correctStreak}
+          />
+        </div>
+      )}
     </div>
   );
 };

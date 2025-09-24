@@ -110,7 +110,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
           return (
             <button
               key={category}
-              onClick={() => onCategoryChange(category)}
+              onClick={() => { onCategoryChange(category); }}
               className={`text-sm transition-all duration-200 hover:text-gray-900 ${
                 isSelected
                   ? 'font-bold text-gray-900 underline decoration-2 underline-offset-2'
