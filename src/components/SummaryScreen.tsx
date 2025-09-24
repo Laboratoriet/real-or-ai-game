@@ -175,9 +175,12 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
             <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${showSharePanel ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'} mb-4`}>
               <div className="overflow-hidden">
                 <div className="relative border border-gray-200 rounded-md p-4 text-left bg-gray-50">
-                  <button onClick={async () => { await handleCopyShare(); }} className="absolute right-2 top-2 p-2 rounded hover:bg-gray-200" aria-label="Copy">
+                  <button onClick={async () => { await handleCopyShare(); }} className="absolute right-2 top-2 p-2 rounded hover:bg-gray-200" aria-label="Copy" title={copied ? 'Copied!' : 'Copy'}>
                     <Clipboard className="w-4 h-4" />
                   </button>
+                  {copied && (
+                    <span className="absolute right-2 top-10 text-xs bg-gray-900 text-white px-2 py-1 rounded shadow transition-opacity duration-200">Copied to clipboard</span>
+                  )}
                   <pre className="whitespace-pre-wrap text-sm text-gray-800">{`Real or AI?\nMy score: ${score}/${totalAttempts}\nStreak: ${streak ?? 0}\n\nPlay yourself at:\nwww.aikemist.no`}</pre>
                 </div>
               </div>
