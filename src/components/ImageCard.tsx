@@ -66,7 +66,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
       
       <img
         src={displaySrc}
-        alt={`${image.isAI ? 'AI-generated' : 'Real'} ${image.category} image`}
+        alt="Game image"
         className={`w-full aspect-square object-cover transition-all duration-300 ${blurClass}`}
         loading="lazy"
       />
