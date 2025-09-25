@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ZoomIn } from 'lucide-react';
 import { Image } from '../types';
 
@@ -120,7 +121,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
       )}
 
       {/* Lightbox fullscreen overlay */}
-      {showLightbox && (
+      {showLightbox && createPortal(
         <div
           className="fixed inset-0 z-[10000] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setShowLightbox(false)}
@@ -136,7 +137,8 @@ const ImageCard: React.FC<ImageCardProps> = ({
           >
             ✕
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
