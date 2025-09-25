@@ -121,8 +121,8 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       `Best streak: ${streak || 0}`,
       `Accuracy: ${Math.round((score / totalAttempts) * 100)}%`,
       '',
-      'Play yourself at:',
-      'www.alkemist.no',
+      'Test your skills at:',
+      'www.aikemist.no',
     ].join('\n')
   ), [score, totalAttempts, streak]);
 
