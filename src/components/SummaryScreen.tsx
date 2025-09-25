@@ -11,6 +11,9 @@ interface SummaryScreenProps {
   isMobile?: boolean;
   streak?: number;
   showShareOnly?: boolean; // For desktop right panel
+  showButtonsOnly?: boolean; // For mobile buttons only
+  isFlipped?: boolean; // For mobile share flip state
+  onShareFlip?: () => void; // For mobile share flip handler
 }
 
 interface DynamicFeedback {
@@ -29,11 +32,13 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
   isMobile = false,
   streak,
   showShareOnly = false,
+  showButtonsOnly = false,
+  isFlipped = false,
+  onShareFlip,
 }) => {
   const [feedback, setFeedback] = useState<DynamicFeedback | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [isFlipped, setIsFlipped] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const accuracy = totalAttempts > 0 ? Math.round((score / totalAttempts) * 100) : 0;
@@ -174,11 +179,39 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
     );
   }
 
+  // Mobile buttons only (for positioning below image container)
+  if (isMobile && showButtonsOnly) {
+    return (
+      <div className="flex justify-center gap-4 w-full">
+        <button
+          onClick={onPlayAgain}
+          className="rounded-full px-6 py-3 text-base bg-gray-900 text-white hover:bg-black flex items-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Play again
+        </button>
+        <button
+          onClick={onShareFlip}
+          className="rounded-full px-6 py-3 text-base border border-gray-300 text-gray-800 hover:bg-gray-50 flex items-center gap-2"
+        >
+          {isFlipped ? (
+            <>Back</>
+          ) : (
+            <>
+              <Share2 className="w-4 h-4" />
+              Share
+            </>
+          )}
+        </button>
+      </div>
+    );
+  }
+
   // Mobile layout with flip effect
   if (isMobile) {
     return (
-      <div className="w-full h-full flex flex-col">
-        <div className={`relative flex-1 ${isFlipped ? '[transform:rotateY(180deg)]' : ''} transition-transform duration-500 [transform-style:preserve-3d]`}>
+      <div className="w-full h-full">
+        <div className={`relative w-full h-full ${isFlipped ? '[transform:rotateY(180deg)]' : ''} transition-transform duration-500 [transform-style:preserve-3d]`}>
           {/* Front side - Summary */}
           <div className={`absolute inset-0 [backface-visibility:hidden] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
             <div className="text-center h-full flex flex-col justify-center px-4">
@@ -224,30 +257,6 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
             </div>
           </div>
         </div>
-
-        {/* Mobile buttons below card */}
-        <div className="flex justify-center gap-3 mt-4">
-          <button
-            onClick={onPlayAgain}
-            className="rounded-full px-6 py-3 text-base bg-gray-900 text-white hover:bg-black flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Play again
-          </button>
-          <button
-            onClick={() => setIsFlipped(!isFlipped)}
-            className="rounded-full px-6 py-3 text-base border border-gray-300 text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-          >
-            {isFlipped ? (
-              <>Back</>
-            ) : (
-              <>
-                <Share2 className="w-4 h-4" />
-                Share
-              </>
-            )}
-          </button>
-        </div>
       </div>
     );
   }
@@ -275,7 +284,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
           Play again
         </button>
         <button
-          onClick={() => setIsFlipped(!isFlipped)}
+          onClick={onShareFlip}
           className="rounded-full px-6 py-3 text-base border border-gray-300 text-gray-800 hover:bg-gray-50 flex items-center gap-2"
         >
           <Share2 className="w-4 h-4" />

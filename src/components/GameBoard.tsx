@@ -10,6 +10,7 @@ import CategoryFilter from './CategoryFilter';
 import SummaryScreen from './SummaryScreen';
 import Confetti from 'react-confetti';
 import { Image } from '../types'; // Use Image type
+import { RefreshCw, Share2 } from 'lucide-react';
 
 const MOBILE_BREAKPOINT = 768; // Define a breakpoint
 // const FETCH_COUNT = 4; // How many pairs to fetch when needed - Might not be needed for mobile now
@@ -91,6 +92,15 @@ const GameBoard: React.FC = () => {
   // Refs for mobile buttons
   const realButtonRef = useRef<HTMLButtonElement>(null);
   const aiButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Mobile share state
+  const [mobileShareFlipped, setMobileShareFlipped] = useState(false);
+
+  // Mobile share handlers
+  const handleMobileShareFlip = useCallback(() => {
+    setMobileShareFlipped(!mobileShareFlipped);
+  }, [mobileShareFlipped]);
+
 
   // --- Initialization and Reset Logic ---
   const initializeMobileGame = useCallback((filterCategory = state.selectedCategory) => {
@@ -499,7 +509,7 @@ const GameBoard: React.FC = () => {
                     />
                   </motion.div>
                  ) : (
-                   <div className="absolute w-full h-full z-20 rounded-lg bg-white p-4">
+                   <div className="absolute w-full h-full z-20 rounded-lg bg-white">
                      <SummaryScreen
                        score={state.score}
                        totalAttempts={state.totalAttempts}
@@ -508,6 +518,8 @@ const GameBoard: React.FC = () => {
                        onCategoryChange={handleCategoryChange}
                        isMobile={true}
                        streak={state.correctStreak}
+                       isFlipped={mobileShareFlipped}
+                       onShareFlip={handleMobileShareFlip}
                      />
                    </div>
                  )}
@@ -537,6 +549,30 @@ const GameBoard: React.FC = () => {
                     className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'md:hover:bg-gray-50' : ''}`}>
                     <span className="text-xl">🤖</span> AI
                   </motion.button>
+                </motion.div>
+              )}
+              {state.showSummary && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.5 }} className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-3">
+                  <button
+                    onClick={handlePlayAgain}
+                    className="rounded-full px-6 py-3 text-base bg-gray-900 text-white hover:bg-black flex items-center gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Play again
+                  </button>
+                  <button
+                    onClick={handleMobileShareFlip}
+                    className="rounded-full px-6 py-3 text-base border border-gray-300 text-gray-800 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    {mobileShareFlipped ? (
+                      <>Back</>
+                    ) : (
+                      <>
+                        <Share2 className="w-4 h-4" />
+                        Share
+                      </>
+                    )}
+                  </button>
                 </motion.div>
               )}
             </div>
