@@ -59,12 +59,24 @@ const ImageCard: React.FC<ImageCardProps> = ({
   const displaySrc = objectUrl || placeholderSrc;
   const blurClass = image.lqipSrc && !isFullImageLoaded ? 'blur-md' : '';
 
+  // Lock body scroll when lightbox is shown
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    if (showLightbox) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = original;
+    }
+    return () => { document.body.style.overflow = original; };
+  }, [showLightbox]);
+
   return (
     <div
       className={`relative overflow-hidden rounded-lg transition-all duration-300 ${ 
         'hover:opacity-90'
       } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       onClick={(e) => {
+        if (showLightbox) return; // ignore clicks when lightbox open
         if ((e.target as HTMLElement).closest('[data-zoom-button]')) return; // ignore when clicking zoom button
         if (!disabled) onSelect(image.id);
       }}
@@ -110,8 +122,10 @@ const ImageCard: React.FC<ImageCardProps> = ({
       {/* Lightbox fullscreen overlay */}
       {showLightbox && (
         <div
-          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[10000] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setShowLightbox(false)}
+          role="dialog"
+          aria-modal="true"
         >
           <img ref={imgFullRef} src={image.src} alt="Full image" className="max-h-[95vh] max-w-[95vw] object-contain" />
           <button

@@ -572,7 +572,21 @@ const GameBoard: React.FC = () => {
                       inline={true}
                     />
                   </div>
-                  <div className="rounded-lg bg-white" />
+                  <div className="rounded-lg bg-white p-2 flex items-stretch">
+                    <div className="w-full rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      {/* Reuse SummaryScreen's share editor only by flipping always visible on desktop */}
+                      <SummaryScreen
+                        score={state.score}
+                        totalAttempts={state.totalAttempts}
+                        category={state.selectedCategory}
+                        onPlayAgain={handlePlayAgain}
+                        onCategoryChange={handleCategoryChange}
+                        isMobile={false}
+                        streak={state.correctStreak}
+                        inline={true}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

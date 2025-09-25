@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FilterCategory } from '../types';
-import { Share2, RefreshCw, Target, Clipboard, RotateCw } from 'lucide-react';
+import { Share2, RefreshCw, Target, Clipboard } from 'lucide-react';
 
 interface SummaryScreenProps {
   score: number;
@@ -164,20 +164,22 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                   <p className="text-gray-700 text-base mb-2">{feedback.message}</p>
                   <p className="text-gray-500 text-sm mb-4">💡 {feedback.tip}</p>
 
-                  <div className="flex justify-center gap-3">
-                    <button
-                      onClick={onPlayAgain}
-                      className="rounded-full px-5 py-2 text-base bg-gray-900 text-white hover:bg-black"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2 inline"/> Play again
-                    </button>
-                    <button
-                      onClick={() => setIsFlipped(isMobile ? true : !isFlipped)}
-                      className="rounded-full px-5 py-2 text-base border border-gray-300 text-gray-800 hover:bg-gray-50"
-                    >
-                      <Share2 className="w-4 h-4 mr-2 inline"/> Share
-                    </button>
-                  </div>
+                  {!isMobile && (
+                    <div className="flex justify-center gap-3">
+                      <button
+                        onClick={onPlayAgain}
+                        className="rounded-full px-5 py-2 text-base bg-gray-900 text-white hover:bg-black"
+                      >
+                        <RefreshCw className="w-4 h-4 mr-2 inline"/> Play again
+                      </button>
+                      <button
+                        onClick={() => setIsFlipped(!isFlipped)}
+                        className="rounded-full px-5 py-2 text-base border border-gray-300 text-gray-800 hover:bg-gray-50"
+                      >
+                        <Share2 className="w-4 h-4 mr-2 inline"/> Share
+                      </button>
+                    </div>
+                  )}
 
                   {!isMobile && (
                     <div className="mt-4 flex flex-col items-center">
@@ -203,11 +205,6 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-sm text-gray-700">Edit share text</div>
                     <div className="flex items-center gap-2">
-                      {isMobile && (
-                        <button onClick={() => setIsFlipped(false)} className="p-2 rounded hover:bg-gray-100" aria-label="Back">
-                          <RotateCw className="w-4 h-4" />
-                        </button>
-                      )}
                       <button onClick={async () => { await handleCopyShare(); }} className="p-2 rounded hover:bg-gray-100" aria-label="Copy" title={copied ? 'Copied!' : 'Copy'}>
                         <Clipboard className="w-4 h-4" />
                       </button>
@@ -223,6 +220,23 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
             </div>
           </div>
         </div>
+        {/* Mobile persistent buttons below card */}
+        {isMobile && (
+          <div className="mt-3 flex justify-center gap-3">
+            <button
+              onClick={onPlayAgain}
+              className="rounded-full px-5 py-2 text-base bg-gray-900 text-white hover:bg-black"
+            >
+              <RefreshCw className="w-4 h-4 mr-2 inline"/> Play again
+            </button>
+            <button
+              onClick={() => setIsFlipped(!isFlipped)}
+              className="rounded-full px-5 py-2 text-base border border-gray-300 text-gray-800 hover:bg-gray-50"
+            >
+              {isFlipped ? 'Back' : (<><Share2 className="w-4 h-4 mr-2 inline"/> Share</>)}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
