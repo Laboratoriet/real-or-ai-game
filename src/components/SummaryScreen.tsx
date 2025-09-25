@@ -207,56 +207,52 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
     );
   }
 
-  // Mobile layout with flip effect
+  // Mobile layout - show summary or share content based on flip state
   if (isMobile) {
     return (
       <div className="w-full h-full">
-        <div className={`relative w-full h-full ${isFlipped ? '[transform:rotateY(180deg)]' : ''} transition-transform duration-500 [transform-style:preserve-3d]`}>
-          {/* Front side - Summary */}
-          <div className={`absolute inset-0 [backface-visibility:hidden] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
-            <div className="text-center h-full flex flex-col justify-center px-4">
-              <div className="mb-6">
-                <div className="text-5xl font-bold text-gray-900 mb-2">{score}/{totalAttempts}</div>
-                <div className="flex items-center justify-center gap-2 text-gray-600">
-                  <Target className="w-4 h-4" />
-                  <span>{accuracy}% accuracy</span>
-                </div>
-              </div>
-              <p className="text-gray-700 text-base mb-3">{feedback.message}</p>
-              <p className="text-gray-500 text-sm mb-6">💡 {feedback.tip}</p>
-            </div>
-          </div>
-
-          {/* Back side - Share */}
-          <div className={`absolute inset-0 [backface-visibility:hidden] ${isFlipped ? '' : '[transform:rotateY(180deg)]'}`}>
-            <div className="h-full flex flex-col p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Share2 className="w-4 h-4 text-gray-600" />
-                <span className="text-gray-800 font-medium">Share</span>
-              </div>
-              <div className="flex-1 relative">
-                <textarea 
-                  ref={textareaRef} 
-                  defaultValue={defaultShareText} 
-                  className="w-full h-full text-sm text-gray-800 bg-white border border-gray-200 rounded-md p-3 outline-none focus:ring-2 focus:ring-gray-300 resize-none"
-                  aria-label="Share text"
-                  placeholder="Edit your share text here"
-                />
-                <button 
-                  onClick={handleCopyShare} 
-                  className="absolute top-2 right-2 p-2 rounded hover:bg-gray-100" 
-                  aria-label="Copy" 
-                  title={copied ? 'Copied!' : 'Copy'}
-                >
-                  <Clipboard className="w-4 h-4" />
-                </button>
-                {copied && (
-                  <span className="absolute right-2 top-10 text-xs bg-gray-900 text-white px-2 py-1 rounded shadow">Copied</span>
-                )}
+        {!isFlipped ? (
+          // Summary content
+          <div className="text-center h-full flex flex-col justify-center px-4">
+            <div className="mb-6">
+              <div className="text-5xl font-bold text-gray-900 mb-2">{score}/{totalAttempts}</div>
+              <div className="flex items-center justify-center gap-2 text-gray-600">
+                <Target className="w-4 h-4" />
+                <span>{accuracy}% accuracy</span>
               </div>
             </div>
+            <p className="text-gray-700 text-base mb-3">{feedback.message}</p>
+            <p className="text-gray-500 text-sm mb-6">💡 {feedback.tip}</p>
           </div>
-        </div>
+        ) : (
+          // Share content
+          <div className="h-full flex flex-col p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Share2 className="w-4 h-4 text-gray-600" />
+              <span className="text-gray-800 font-medium">Share</span>
+            </div>
+            <div className="flex-1 relative">
+              <textarea 
+                ref={textareaRef} 
+                defaultValue={defaultShareText} 
+                className="w-full h-full text-sm text-gray-800 bg-white border border-gray-200 rounded-md p-3 outline-none focus:ring-2 focus:ring-gray-300 resize-none"
+                aria-label="Share text"
+                placeholder="Edit your share text here"
+              />
+              <button 
+                onClick={handleCopyShare} 
+                className="absolute top-2 right-2 p-2 rounded hover:bg-gray-100" 
+                aria-label="Copy" 
+                title={copied ? 'Copied!' : 'Copy'}
+              >
+                <Clipboard className="w-4 h-4" />
+              </button>
+              {copied && (
+                <span className="absolute right-2 top-10 text-xs bg-gray-900 text-white px-2 py-1 rounded shadow">Copied</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -275,20 +271,13 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
       <p className="text-gray-700 text-base mb-3 text-center">{feedback.message}</p>
       <p className="text-gray-500 text-sm mb-6 text-center">💡 {feedback.tip}</p>
 
-      <div className="flex justify-center gap-3 mb-6">
+      <div className="flex justify-center mb-6">
         <button
           onClick={onPlayAgain}
           className="rounded-full px-6 py-3 text-base bg-gray-900 text-white hover:bg-black flex items-center gap-2"
         >
           <RefreshCw className="w-4 h-4" />
           Play again
-        </button>
-        <button
-          onClick={onShareFlip}
-          className="rounded-full px-6 py-3 text-base border border-gray-300 text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-        >
-          <Share2 className="w-4 h-4" />
-          Share
         </button>
       </div>
 
