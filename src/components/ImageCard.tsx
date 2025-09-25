@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ZoomIn } from 'lucide-react';
 import { Image } from '../types';
 
 interface ImageCardProps {
@@ -84,11 +85,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
         className="absolute top-2 right-2 z-20 h-7 w-7 rounded-full bg-white/85 backdrop-blur border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-white shadow-sm"
         aria-label="Open fullscreen"
       >
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="6" />
-          <path d="M16 16l4 4" />
-          <path d="M11 8v3M11 11h3" />
-        </svg>
+        <ZoomIn className="h-4 w-4" />
       </button>
       
       {showResult && selected && (
