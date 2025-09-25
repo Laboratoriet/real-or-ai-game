@@ -94,6 +94,12 @@ const GameBoard: React.FC = () => {
 
   // --- Initialization and Reset Logic ---
   const initializeMobileGame = useCallback((filterCategory = state.selectedCategory) => {
+    // Ensure any pending timers/advancement state are cleared when (re)initializing
+    if (nextActionTimerRef.current) {
+      clearTimeout(nextActionTimerRef.current);
+      nextActionTimerRef.current = null;
+    }
+    setIsAdvancing(false);
     setMobileLoading(true);
     setMobileError(null);
     try {
@@ -138,6 +144,8 @@ const GameBoard: React.FC = () => {
     // Clear confetti if showing
     if (confettiTimerRef.current) clearTimeout(confettiTimerRef.current);
     setShowConfetti(false);
+    // Ensure mobile advancing state is cleared
+    setIsAdvancing(false);
 
     if (isMobile) {
       initializeMobileGame(); // Re-initialize mobile state
@@ -153,6 +161,12 @@ const GameBoard: React.FC = () => {
     console.log('setCategory called, new category should be:', category);
     resetGame(); // Reset score and game state when changing category
     hideSummary(); // Hide summary when changing category
+    // Clear any pending auto-advance and unblock interactions
+    if (nextActionTimerRef.current) {
+      clearTimeout(nextActionTimerRef.current);
+      nextActionTimerRef.current = null;
+    }
+    setIsAdvancing(false);
     
     if (isMobile) {
       console.log('Initializing mobile game with category:', category);
@@ -166,6 +180,12 @@ const GameBoard: React.FC = () => {
   const handlePlayAgain = () => {
     hideSummary();
     resetGame();
+    // Unblock any stuck state from previous round
+    if (nextActionTimerRef.current) {
+      clearTimeout(nextActionTimerRef.current);
+      nextActionTimerRef.current = null;
+    }
+    setIsAdvancing(false);
     
     if (isMobile) {
       initializeMobileGame();

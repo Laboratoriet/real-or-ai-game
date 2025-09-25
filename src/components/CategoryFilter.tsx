@@ -52,7 +52,11 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
             className="w-full px-3 py-2 text-sm text-gray-700 bg-transparent focus:outline-none flex items-center justify-between"
           >
             <div className="flex items-center gap-2">
-              <Grid className="w-4 h-4 text-gray-500" />
+              {selectedCategory === 'all' && (<Grid className="w-4 h-4 text-gray-500" />)}
+              {selectedCategory === 'people' && (<Users className="w-4 h-4 text-gray-500" />)}
+              {selectedCategory === 'nature' && (<Leaf className="w-4 h-4 text-gray-500" />)}
+              {selectedCategory === 'city' && (<Building className="w-4 h-4 text-gray-500" />)}
+              {selectedCategory === 'interior' && (<Armchair className="w-4 h-4 text-gray-500" />)}
               <span className="font-medium">{categoryLabels[selectedCategory]}</span>
             </div>
             <svg
