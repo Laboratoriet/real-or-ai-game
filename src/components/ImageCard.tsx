@@ -21,6 +21,8 @@ const ImageCard: React.FC<ImageCardProps> = ({
   const [isFullImageLoaded, setIsFullImageLoaded] = useState(false);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const [showLightbox, setShowLightbox] = useState(false);
+  const imgFullRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     // Reset loaded state when image src changes
@@ -61,7 +63,10 @@ const ImageCard: React.FC<ImageCardProps> = ({
       className={`relative overflow-hidden rounded-lg transition-all duration-300 ${ 
         'hover:opacity-90'
       } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-      onClick={() => !disabled && onSelect(image.id)}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('[data-zoom-button]')) return; // ignore when clicking zoom button
+        if (!disabled) onSelect(image.id);
+      }}
     >
       
       <img
@@ -70,6 +75,21 @@ const ImageCard: React.FC<ImageCardProps> = ({
         className={`w-full aspect-square object-cover transition-all duration-300 ${blurClass}`}
         loading="lazy"
       />
+
+      {/* Zoom button */}
+      <button
+        type="button"
+        data-zoom-button
+        onClick={(e) => { e.stopPropagation(); setShowLightbox(true); }}
+        className="absolute top-2 right-2 z-20 h-7 w-7 rounded-full bg-white/85 backdrop-blur border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-white shadow-sm"
+        aria-label="Open fullscreen"
+      >
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="6" />
+          <path d="M16 16l4 4" />
+          <path d="M11 8v3M11 11h3" />
+        </svg>
+      </button>
       
       {showResult && selected && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/60 text-4xl">
@@ -87,6 +107,24 @@ const ImageCard: React.FC<ImageCardProps> = ({
           ) : (
             <span className="text-lg font-medium">Real</span>
           )}
+        </div>
+      )}
+
+      {/* Lightbox fullscreen overlay */}
+      {showLightbox && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setShowLightbox(false)}
+        >
+          <img ref={imgFullRef} src={image.src} alt="Full image" className="max-h-[95vh] max-w-[95vw] object-contain" />
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setShowLightbox(false); }}
+            className="absolute top-4 right-4 text-white/90 hover:text-white"
+            aria-label="Close"
+          >
+            ✕
+          </button>
         </div>
       )}
     </div>

@@ -458,7 +458,7 @@ const GameBoard: React.FC = () => {
             {/* --- Updated Mobile Image Container --- */}
             <div className="relative w-[98%] mx-auto aspect-square flex justify-center items-center mb-1"> {/* Use 98% width */} 
               <AnimatePresence mode="wait" custom={swipeDirectionForExit}>
-                {currentMobileImage ? (
+                {!state.showSummary && currentMobileImage ? (
                   <motion.div
                     key={currentMobileImage.id}
                   className="absolute w-full h-full z-10 overflow-hidden rounded-lg"
@@ -479,7 +479,18 @@ const GameBoard: React.FC = () => {
                     />
                   </motion.div>
                  ) : (
-                   <div className="text-gray-500">No image available.</div>
+                   <div className="absolute w-full h-full z-20 rounded-lg bg-white flex items-center justify-center p-2">
+                     <SummaryScreen
+                       score={state.score}
+                       totalAttempts={state.totalAttempts}
+                       category={state.selectedCategory}
+                       onPlayAgain={handlePlayAgain}
+                       onCategoryChange={handleCategoryChange}
+                       isMobile={true}
+                       streak={state.correctStreak}
+                       inline={true}
+                     />
+                   </div>
                  )}
               </AnimatePresence>
 
@@ -487,7 +498,7 @@ const GameBoard: React.FC = () => {
 
               {/* ... Inline Feedback Emoji ... */} 
               <AnimatePresence>
-                {state.showFeedback && currentMobileImage && (
+                {state.showFeedback && currentMobileImage && !state.showSummary && (
                   <motion.div key="feedback-emoji-inline" className="absolute inset-0 z-30 flex items-center justify-center bg-white/60 rounded-lg pointer-events-none" variants={feedbackInlineVariants} initial="hidden" animate="visible" exit="exit">
                     <span className="text-7xl">{state.isCorrect ? '✅' : '❌'}</span>
                   </motion.div>
@@ -497,7 +508,7 @@ const GameBoard: React.FC = () => {
 
             {/* ... Mobile Buttons ... */} 
             <div className="flex-shrink-0 w-full">
-              {currentMobileImage && (
+              {currentMobileImage && !state.showSummary && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.5 }} className="flex justify-center gap-4 w-full max-w-md mx-auto px-4 mt-2 mb-3">
                   <motion.button ref={realButtonRef} key={`real-button-${buttonResetKey}`} onClick={() => handleMobileGuess('real')} disabled={state.showFeedback || isAdvancing} animate={{ opacity: state.showFeedback ? 0.3 : 1 }} transition={{ duration: 0.2 }}
                     className={`flex-grow basis-0 px-5 py-2 text-gray-700 bg-white rounded-full border-2 border-gray-200 disabled:opacity-50 disabled:bg-white text-base flex items-center justify-center gap-2 ${!state.showFeedback && !isAdvancing ? 'md:hover:bg-gray-50' : ''}`}>
@@ -512,38 +523,58 @@ const GameBoard: React.FC = () => {
             </div>
 
             {/* --- Score Display (Moved below buttons) --- */}
-            <div className="w-full flex justify-center mb-4 flex-shrink-0">
-                <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
-            </div>
+            {!state.showSummary && (
+              <div className="w-full flex justify-center mb-4 flex-shrink-0">
+                  <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
+              </div>
+            )}
           </div>
 
         ) : (
           // ------------- DESKTOP VIEW (Largely Unchanged) -------------
           <div className="flex-grow flex flex-col min-h-0 w-full">
             <div className="relative w-full mt-2"> {/* Reduced top margin */}
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 md:px-4 2xl:px-0">
-                 {shuffledDesktopImages.map((image) => (
-                   <ImageCard
-                      key={image.id}
-                      image={image}
-                      selected={state.selectedImageId === image.id}
-                      showResult={state.showFeedback && state.selectedImageId === image.id}
-                      isCorrect={state.isCorrect ?? false}
-                      onSelect={() => handleImageSelect(image.id)}
-                      disabled={state.showFeedback || !!state.selectedImageId}
-                   />
-                 ))}
-               </div>
-               {/* ... Desktop Instruction Text ... */}
-               <div className="w-full flex justify-center mt-6 mb-3 md:mt-4 md:mb-2">
-                 <p className="text-gray-600 text-center text-base md:text-sm lg:text-base">
-                   Click on the image you think is <strong>AI-generated</strong>.
-                 </p>
-               </div>
-               {/* ... Desktop Score Display ... */}
-               <div className="w-full flex justify-center mt-2 mb-1 md:mt-2">
-                  <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
+              {!state.showSummary ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 md:px-4 2xl:px-0">
+                    {shuffledDesktopImages.map((image) => (
+                      <ImageCard
+                        key={image.id}
+                        image={image}
+                        selected={state.selectedImageId === image.id}
+                        showResult={state.showFeedback && state.selectedImageId === image.id}
+                        isCorrect={state.isCorrect ?? false}
+                        onSelect={() => handleImageSelect(image.id)}
+                        disabled={state.showFeedback || !!state.selectedImageId}
+                      />
+                    ))}
+                  </div>
+                  <div className="w-full flex justify-center mt-6 mb-3 md:mt-4 md:mb-2">
+                    <p className="text-gray-600 text-center text-base md:text-sm lg:text-base">
+                      Click on the image you think is <strong>AI-generated</strong>.
+                    </p>
+                  </div>
+                  <div className="w-full flex justify-center mt-2 mb-1 md:mt-2">
+                    <ScoreDisplay score={state.score} totalAttempts={state.totalAttempts} onReset={handleResetGame} />
+                  </div>
+                </>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 md:px-4 2xl:px-0">
+                  <div className="rounded-lg bg-white flex items-center justify-center p-2">
+                    <SummaryScreen
+                      score={state.score}
+                      totalAttempts={state.totalAttempts}
+                      category={state.selectedCategory}
+                      onPlayAgain={handlePlayAgain}
+                      onCategoryChange={handleCategoryChange}
+                      isMobile={false}
+                      streak={state.correctStreak}
+                      inline={true}
+                    />
+                  </div>
+                  <div className="rounded-lg bg-white" />
                 </div>
+              )}
             </div>
           </div>
         )}
@@ -556,21 +587,7 @@ const GameBoard: React.FC = () => {
           )}
       </div>
 
-      {/* --- Summary Screen (inline, uses same content area) --- */}
-      {state.showSummary && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center p-3">
-          <SummaryScreen
-            score={state.score}
-            totalAttempts={state.totalAttempts}
-            category={state.selectedCategory}
-            onPlayAgain={handlePlayAgain}
-            onCategoryChange={handleCategoryChange}
-            isMobile={isMobile}
-            streak={state.correctStreak}
-            inline={true}
-          />
-        </div>
-      )}
+      {/* Summary is embedded per-view above */}
     </div>
   );
 };
