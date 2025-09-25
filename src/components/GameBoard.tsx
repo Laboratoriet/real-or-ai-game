@@ -98,8 +98,12 @@ const GameBoard: React.FC = () => {
 
   // Mobile share handlers
   const handleMobileShareFlip = useCallback(() => {
-    setMobileShareFlipped(prev => !prev);
-  }, []);
+    console.log('🔄 handleMobileShareFlip called');
+    setMobileShareFlipped(prev => {
+      console.log('🔄 Setting mobileShareFlipped from', prev, 'to', !prev);
+      return !prev;
+    });
+  }, []); // No dependencies to avoid stale closure
 
 
   // --- Initialization and Reset Logic ---

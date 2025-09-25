@@ -197,6 +197,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
 
   // Mobile layout with flip effect
   if (isMobile) {
+    console.log('📱 SummaryScreen mobile render, isFlipped:', isFlipped);
     return (
       <div className="w-full h-full">
         <div className={`relative w-full h-full ${isFlipped ? '[transform:rotateY(180deg)]' : ''} transition-transform duration-500 [transform-style:preserve-3d]`}>
