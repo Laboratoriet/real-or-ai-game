@@ -104,6 +104,9 @@ const GameBoard: React.FC = () => {
 
   // --- Initialization and Reset Logic ---
   const initializeMobileGame = useCallback((filterCategory = state.selectedCategory) => {
+    console.log('🚀 initializeMobileGame called with filterCategory:', filterCategory);
+    console.log('🚀 state.selectedCategory at time of call:', state.selectedCategory);
+    
     // Ensure any pending timers/advancement state are cleared when (re)initializing
     if (nextActionTimerRef.current) {
       clearTimeout(nextActionTimerRef.current);
@@ -115,26 +118,33 @@ const GameBoard: React.FC = () => {
     setMobileShareFlipped(false); // Reset mobile share flip state
     try {
       const filteredImages = getFilteredImages(filterCategory);
+      console.log('🖼️ getFilteredImages returned:', filteredImages.length, 'images for category:', filterCategory);
+      
       if (filteredImages.length === 0) {
+        console.log('❌ No images found for category:', filterCategory);
         setMobileError('No images available for the selected category.');
         setMasterMobileList([]);
         setCurrentMobileImage(null);
       } else {
+        console.log('✅ Setting up mobile game with', filteredImages.length, 'images');
         setMasterMobileList(filteredImages);
         setCurrentMobileImage(filteredImages[0]); // Set the first image
         setMasterMobileIndex(0);
         setUniqueImagesShownCount(0);
+        console.log('✅ First image set:', filteredImages[0]?.id);
       }
-    } catch {
+    } catch (error) {
+        console.log('❌ Error in initializeMobileGame:', error);
         setMobileError('Failed to load images.');
     }
     setMobileLoading(false);
-  }, [state.selectedCategory]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Remove state.selectedCategory dependency to avoid stale closure - we pass category as parameter
 
   // Initialize on mount if mobile
   useEffect(() => {
     if (isMobile) {
-      initializeMobileGame();
+      initializeMobileGame(state.selectedCategory); // Pass current category explicitly
     } else {
        // If starting on desktop, generate initial pair ONLY if not already loaded
        if (!currentPair) {
@@ -166,10 +176,10 @@ const GameBoard: React.FC = () => {
   };
 
   const handleCategoryChange = (category: 'all' | 'people' | 'nature' | 'city' | 'interior') => {
-    console.log('handleCategoryChange called with:', category);
-    console.log('Current state.selectedCategory before change:', state.selectedCategory);
+    console.log('🔄 handleCategoryChange called with:', category);
+    console.log('📊 Current state.selectedCategory before change:', state.selectedCategory);
     setCategory(category);
-    console.log('setCategory called, new category should be:', category);
+    console.log('✅ setCategory called, new category should be:', category);
     resetGame(); // Reset score and game state when changing category
     hideSummary(); // Hide summary when changing category
     // Clear any pending auto-advance and unblock interactions
@@ -180,10 +190,16 @@ const GameBoard: React.FC = () => {
     setIsAdvancing(false);
     
     if (isMobile) {
-      console.log('Initializing mobile game with category:', category);
+      console.log('📱 Initializing mobile game with category:', category);
+      console.log('📱 Current mobile state before init:', {
+        masterMobileList: masterMobileList.length,
+        currentMobileImage: currentMobileImage?.id,
+        masterMobileIndex,
+        uniqueImagesShownCount
+      });
       initializeMobileGame(category);
     } else {
-      console.log('Generating random pair with category:', category);
+      console.log('🖥️ Generating random pair with category:', category);
       generateRandomPair(category);
     }
   };
