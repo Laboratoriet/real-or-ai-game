@@ -98,8 +98,8 @@ const GameBoard: React.FC = () => {
 
   // Mobile share handlers
   const handleMobileShareFlip = useCallback(() => {
-    setMobileShareFlipped(!mobileShareFlipped);
-  }, [mobileShareFlipped]);
+    setMobileShareFlipped(prev => !prev);
+  }, []);
 
 
   // --- Initialization and Reset Logic ---
@@ -112,6 +112,7 @@ const GameBoard: React.FC = () => {
     setIsAdvancing(false);
     setMobileLoading(true);
     setMobileError(null);
+    setMobileShareFlipped(false); // Reset mobile share flip state
     try {
       const filteredImages = getFilteredImages(filterCategory);
       if (filteredImages.length === 0) {
@@ -519,7 +520,6 @@ const GameBoard: React.FC = () => {
                        isMobile={true}
                        streak={state.correctStreak}
                        isFlipped={mobileShareFlipped}
-                       onShareFlip={handleMobileShareFlip}
                      />
                    </div>
                  )}

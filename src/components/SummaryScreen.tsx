@@ -13,7 +13,6 @@ interface SummaryScreenProps {
   showShareOnly?: boolean; // For desktop right panel
   showButtonsOnly?: boolean; // For mobile buttons only
   isFlipped?: boolean; // For mobile share flip state
-  onShareFlip?: () => void; // For mobile share flip handler
 }
 
 interface DynamicFeedback {
@@ -34,7 +33,6 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
   showShareOnly = false,
   showButtonsOnly = false,
   isFlipped = false,
-  onShareFlip,
 }) => {
   const [feedback, setFeedback] = useState<DynamicFeedback | null>(null);
   const [loading, setLoading] = useState(true);
@@ -192,19 +190,6 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({
         >
           <RefreshCw className="w-4 h-4" />
           Play again
-        </button>
-        <button
-          onClick={onShareFlip}
-          className="rounded-full px-6 py-3 text-base border border-gray-300 text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-        >
-          {isFlipped ? (
-            <>Back</>
-          ) : (
-            <>
-              <Share2 className="w-4 h-4" />
-              Share
-            </>
-          )}
         </button>
       </div>
     );
