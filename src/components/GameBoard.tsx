@@ -183,7 +183,7 @@ const GameBoard: React.FC = () => {
       showFeedback(isCorrect);
       
     }
-  }, [state.selectedImageId, state.showFeedback, state.totalAttempts, isMobile, currentPair, selectImage, showFeedback, showSummary]);
+  }, [state.selectedImageId, state.showFeedback, isMobile, currentPair, selectImage, showFeedback]);
 
   // --- Mobile Guessing Logic ---
   const handleMobileGuess = useCallback((guess: 'real' | 'ai') => {
@@ -198,7 +198,7 @@ const GameBoard: React.FC = () => {
     // Attempt to blur buttons immediately after guess
     realButtonRef.current?.blur();
     aiButtonRef.current?.blur();
-  }, [state.showFeedback, currentMobileImage, isMobile, isAdvancing, state.totalAttempts, showFeedback, showSummary]);
+  }, [state.showFeedback, currentMobileImage, isMobile, isAdvancing, showFeedback]);
 
   // --- Mobile Advancement Logic --- 
   const advanceMobileImage = useCallback(() => {
@@ -479,7 +479,7 @@ const GameBoard: React.FC = () => {
                     />
                   </motion.div>
                  ) : (
-                   <div className="absolute w-full h-full z-20 rounded-lg bg-white flex items-center justify-center p-2">
+                   <div className="absolute w-full h-full z-20 rounded-lg bg-white p-4">
                      <SummaryScreen
                        score={state.score}
                        totalAttempts={state.totalAttempts}
@@ -488,7 +488,6 @@ const GameBoard: React.FC = () => {
                        onCategoryChange={handleCategoryChange}
                        isMobile={true}
                        streak={state.correctStreak}
-                       inline={true}
                      />
                    </div>
                  )}
@@ -560,7 +559,7 @@ const GameBoard: React.FC = () => {
                 </>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 md:px-4 2xl:px-0">
-                  <div className="rounded-lg bg-white flex items-center justify-center p-2">
+                  <div className="rounded-lg bg-white p-6 flex items-center justify-center">
                     <SummaryScreen
                       score={state.score}
                       totalAttempts={state.totalAttempts}
@@ -569,23 +568,19 @@ const GameBoard: React.FC = () => {
                       onCategoryChange={handleCategoryChange}
                       isMobile={false}
                       streak={state.correctStreak}
-                      inline={true}
                     />
                   </div>
-                  <div className="rounded-lg bg-white p-2 flex items-stretch">
-                    <div className="w-full rounded-lg border border-gray-200 bg-gray-50 p-3">
-                      {/* Reuse SummaryScreen's share editor only by flipping always visible on desktop */}
-                      <SummaryScreen
-                        score={state.score}
-                        totalAttempts={state.totalAttempts}
-                        category={state.selectedCategory}
-                        onPlayAgain={handlePlayAgain}
-                        onCategoryChange={handleCategoryChange}
-                        isMobile={false}
-                        streak={state.correctStreak}
-                        inline={true}
-                      />
-                    </div>
+                  <div className="rounded-lg bg-white p-6 flex items-stretch">
+                    <SummaryScreen
+                      score={state.score}
+                      totalAttempts={state.totalAttempts}
+                      category={state.selectedCategory}
+                      onPlayAgain={handlePlayAgain}
+                      onCategoryChange={handleCategoryChange}
+                      isMobile={false}
+                      streak={state.correctStreak}
+                      showShareOnly={true}
+                    />
                   </div>
                 </div>
               )}
