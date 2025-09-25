@@ -556,9 +556,9 @@ const GameBoard: React.FC = () => {
           )}
       </div>
 
-      {/* --- Summary Screen --- */}
+      {/* --- Summary Screen (inline, uses same content area) --- */}
       {state.showSummary && (
-        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 z-40 flex items-center justify-center p-3">
           <SummaryScreen
             score={state.score}
             totalAttempts={state.totalAttempts}
@@ -567,6 +567,7 @@ const GameBoard: React.FC = () => {
             onCategoryChange={handleCategoryChange}
             isMobile={isMobile}
             streak={state.correctStreak}
+            inline={true}
           />
         </div>
       )}

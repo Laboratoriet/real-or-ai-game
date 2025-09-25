@@ -13,7 +13,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ score, totalAttempts, onRes
   return (
     <div className="flex items-center justify-center gap-6 md:gap-8 py-3 px-4">
       <div className="text-center">
-        <div className="text-2xl md:text-3xl font-medium text-gray-900">{score}</div>
+        <div className="text-2xl md:text-3xl font-medium text-gray-900">{score}/10</div>
         <div className="text-sm md:text-base text-gray-600 font-medium">Correct</div>
       </div>
       

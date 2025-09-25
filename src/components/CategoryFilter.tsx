@@ -51,13 +51,12 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
             className="w-full px-3 py-2 text-sm text-gray-700 bg-transparent focus:outline-none flex items-center justify-between"
           >
             <div className="flex items-center gap-2">
-              <svg
-                className="w-4 h-4 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              {/* simple grid icon */}
+              <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                <rect x="14" y="14" width="7" height="7" rx="1"/>
               </svg>
               <span className="font-medium">{categoryLabels[selectedCategory]}</span>
             </div>
@@ -91,7 +90,14 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
                       selectedCategory === category ? 'font-bold text-gray-900' : 'text-gray-700'
                     }`}
                   >
-                    {categoryLabels[category]}
+                    <span className="inline-flex items-center gap-2">
+                      {category === 'all' && (<svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/></svg>)}
+                      {category === 'people' && (<svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><path d="M2 21c1.5-4 6-6 10-4"/></svg>)}
+                      {category === 'nature' && (<svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20"/><path d="M7 12c3-2 7-2 10 0"/></svg>)}
+                      {category === 'city' && (<svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="7" width="6" height="13"/><rect x="13" y="3" width="8" height="17"/></svg>)}
+                      {category === 'interior' && (<svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><rect x="4" y="10" width="16" height="7"/></svg>)}
+                      <span>{categoryLabels[category]}</span>
+                    </span>
                   </button>
                 ))}
               </motion.div>
