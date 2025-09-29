@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "images:standardize": "node scripts/standardize-images-to-jpg.mjs",
+    "images:rename": "node scripts/rename_images.cjs",
+    "images:lqip": "node scripts/generate-lqips.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
